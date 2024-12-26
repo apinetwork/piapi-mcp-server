@@ -12,6 +12,9 @@ A TypeScript implementation of a Model Context Protocol (MCP) server that integr
 - [ ] Trellis 3D model generation
 - [ ] Workflow planning inside LLMs
 
+## Working with Claude Desktop
+![image](https://github.com/user-attachments/assets/a7567797-47e1-43dd-9505-f2677f9fa4f6)
+
 
 ## Prerequisites
 
