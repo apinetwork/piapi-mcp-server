@@ -1,105 +1,40 @@
 import { config } from "dotenv";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import { FastMCP } from "fastmcp";
 
 // Load environment variables
 config();
 
 const apiKey = process.env.PIAPI_API_KEY;
+
 if (!apiKey) {
   console.error("Error: PIAPI_API_KEY not set");
+
   process.exit(1);
 }
 
-// Create server instance
-const server = new Server({
+const server = new FastMCP({
   name: "piapi",
   version: "1.0.0",
-  capabilities: {
-    tools: {}
-  }
 });
 
-// List available tools
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  console.error("Handling list_tools request");
-  return {
-    tools: [
-      {
-        name: "generate_image",
-        description: "Generate an image from text using PiAPI Flux",
-        inputSchema: {
-          type: "object",
-          properties: {
-            prompt: {
-              type: "string",
-              description: "Text description of the image to generate",
-            },
-            width: {
-              type: "integer",
-              description: "Image width (default: 1024, max: 1024)",
-              default: 1024,
-              maximum: 1024,
-            },
-            height: {
-              type: "integer",
-              description: "Image height (default: 1024, max: 1024)",
-              default: 1024,
-              maximum: 1024,
-            }
-          },
-          required: ["prompt"],
-        },
-      },
-    ],
-  };
-});
-
-// Handle tool execution
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  try {
-    if (request.params.name !== "generate_image") {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error: Unknown tool ${request.params.name}`,
-          },
-        ],
-      };
-    }
-
-    const args = z.object({
-      prompt: z.string(),
-      width: z.union([z.string(), z.number()]).transform(val => 
-        typeof val === 'string' ? parseInt(val) : val
-      ).pipe(z.number().min(1).max(1024)).optional().default(1024),
-      height: z.union([z.string(), z.number()]).transform(val => 
-        typeof val === 'string' ? parseInt(val) : val
-      ).pipe(z.number().min(1).max(1024)).optional().default(1024),
-    }).parse(request.params.arguments);
-
-    // Report initial progress
-    const progressToken = request.params._meta?.progressToken;
-    const reportProgress = async (current: number, total: number) => {
-      if (progressToken) {
-        await server.notification({
-          method: "notifications/progress",
-          params: {
-            token: progressToken,
-            current,
-            total
-          }
-        });
-      }
-    };
-
-    await reportProgress(10, 100);
+server.addTool({
+  name: "generate_image",
+  description: "Generate an image from text using PiAPI Flux",
+  parameters: z.object({
+    prompt: z.string(),
+    width: z.union([z.string(), z.number()]).transform(val => 
+      typeof val === 'string' ? parseInt(val) : val
+    ).pipe(z.number().min(1).max(1024)).optional().default(1024),
+    height: z.union([z.string(), z.number()]).transform(val => 
+      typeof val === 'string' ? parseInt(val) : val
+    ).pipe(z.number().min(1).max(1024)).optional().default(1024),
+  }),
+  execute: async (args, { reportProgress }) => {
+    await reportProgress({
+      progress: 10,
+      total: 100
+    });
 
     // Create image generation task
     const createResponse = await fetch("https://api.piapi.ai/api/v1/task", {
@@ -130,21 +65,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     });
 
     const createData = await createResponse.json();
+
     if (createData.code !== 200) {
       throw new Error(`Task creation failed: ${createData.message}`);
     }
 
     const taskId = createData.data.task_id;
+
     console.error(`Task created with ID: ${taskId}`);
 
     // Poll for completion
     const maxAttempts = 60;
+
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       console.error(`Checking task status (attempt ${attempt + 1})...`);
 
       // Report progress
       const progress = Math.min(10 + (attempt / maxAttempts * 90), 99);
-      await reportProgress(progress, 100);
+
+      await reportProgress({
+        progress, total: 100
+      });
 
       const statusResponse = await fetch(`https://api.piapi.ai/api/v1/task/${taskId}`, {
         headers: {
@@ -153,15 +94,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       });
 
       const statusData = await statusResponse.json();
+
       if (statusData.code !== 200) {
         throw new Error(`Status check failed: ${statusData.message}`);
       }
 
       const { status, output, error } = statusData.data;
+
       console.error(`Task status: ${status}`);
 
       if (status === "completed") {
-        await reportProgress(100, 100);
+        await reportProgress({
+          progress: 100,
+          total: 100
+        });
 
         if (!output) {
           throw new Error("Task completed but no output found");
@@ -180,6 +126,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         const usage = statusData.data.meta.usage?.consume || "unknown";
+
         return {
           content: [
             {
@@ -198,24 +145,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     throw new Error("Generation timed out");
-  } catch (error) {
-    console.error("Error in tool execution:", error);
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error in tool execution: ${error instanceof Error ? error.message : String(error)}`,
-        },
-      ],
-    };
   }
 });
 
 // Start the server
 async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("PiAPI MCP Server running on stdio");
+  await server.start({
+    transportType: 'stdio'
+  });
 }
 
 main().catch((error) => {
