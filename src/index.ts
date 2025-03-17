@@ -23,12 +23,12 @@ server.addTool({
   description: "Generate an image from text using PiAPI Flux",
   parameters: z.object({
     prompt: z.string(),
-    width: z.union([z.string(), z.number()]).transform(val => 
+    width: z.union([z.string(), z.number()]).transform(val =>
       typeof val === 'string' ? parseInt(val) : val
-    ).pipe(z.number().min(1).max(1024)).optional().default(1024),
-    height: z.union([z.string(), z.number()]).transform(val => 
+    ).pipe(z.number().min(128).max(1024)).optional().default(1024),
+    height: z.union([z.string(), z.number()]).transform(val =>
       typeof val === 'string' ? parseInt(val) : val
-    ).pipe(z.number().min(1).max(1024)).optional().default(1024),
+    ).pipe(z.number().min(128).max(1024)).optional().default(1024),
   }),
   execute: async (args, { reportProgress }) => {
     await reportProgress({

@@ -51,13 +51,12 @@ PIAPI_API_KEY=your_api_key_here
 npm run build
 ```
 
-## Usage
-
-### Running the Server
-
+5. Test server with MCP Inspector:
 ```bash
-npm start
+npx fastmcp inspect dist/index.js
 ```
+
+## Usage
 
 ### Connecting to Claude Desktop
 
@@ -76,6 +75,47 @@ Add this to your Claude Desktop configuration file (`~/Library/Application Suppo
   }
 }
 ```
+
+### Connecting to Cursor
+
+Note: Following guide is based on Cursor 0.47.5. Features and behaviors may vary in different versions.
+
+To configure the MCP server:
+
+1. Navigate to: File > Preferences > Cursor Settings
+2. Select "MCP" tab on the left panel
+3. Click "Add new global MCP server" button in the top right
+4. Add your configuration in the opened mcp.json file
+
+```json
+{
+  "mcpServers": {
+    "piapi": {
+      "command": "node",
+      "args": ["/absolute/path/to/piapi-mcp-server/dist/index.js"],
+      "env": {
+        "PIAPI_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+5. After configuration, you'll see a "piapi" entry in MCP Servers page
+6. Click the Refresh button on the entry or restart Cursor to connect to the piapi server
+
+To test the piapi image generation:
+
+1. Open and select "Agent mode" in Cursor Chat, or use the shortcut key `Ctrl+I`
+2. Enter a test prompt, for example: "generate image of a dog"
+3. The image will be generated based on your prompt using piapi server
+
+To disable the piapi server:
+
+1. Navigate to the MCP Servers page in Cursor Settings
+2. Find the "piapi" entry in the server list
+3. Click the "Enabled" toggle button to switch it to "Disabled"
+
 
 ## Development
 
