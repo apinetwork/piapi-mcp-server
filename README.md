@@ -53,8 +53,22 @@ npm run build
 
 5. Test server with MCP Inspector:
 ```bash
-npx fastmcp inspect dist/index.js
+npm run inspect
 ```
+
+After running the command, MCP Inspector will be available at http://localhost:5173 (default port: 5173). Open this URL in your browser to start testing. The default timeout for inspector operations is 10000ms (10 seconds), which may not be sufficient for image generation tasks. It's recommended to increase the timeout when testing image generation or other time-consuming operations. You can adjust the timeout by adding a timeout parameter to the URL, for example: http://localhost:5173?timeout=60000 (sets timeout to 60 seconds)
+
+The MCP Inspector is a powerful development tool that helps you test and debug your MCP server implementation. Key features include:
+
+- **Interactive Testing**: Test your server's functions directly through a web interface
+- **Real-time Feedback**: See immediate results of your function calls and any errors that occur
+- **Request/Response Inspection**: View detailed information about requests and responses
+- **Function Documentation**: Browse available functions and their parameters
+- **Custom Parameters**: Set custom timeout values and other configuration options
+- **History Tracking**: Keep track of your previous function calls and their results
+
+For detailed information about using the MCP Inspector and its features, visit the [official MCP documentation](https://modelcontextprotocol.io/docs/tools/inspector).
+
 
 ## Usage
 
