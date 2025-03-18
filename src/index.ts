@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-import { FastMCP, imageContent, UserError } from "fastmcp";
+import { FastMCP, imageContent, Progress, UserError } from "fastmcp";
 import { z } from "zod";
 // Load environment variables
 config();
@@ -44,7 +44,8 @@ main().catch((error) => {
 function registerGeneralTool(server: FastMCP) {
   server.addTool({
     name: "show_image",
-    description: "Show an image",
+    description:
+      "Show an image with pixels less than 768*1024 due to Claude limitation",
     parameters: z.object({
       url: z.string().url().describe("The URL of the image to show"),
     }),
@@ -67,6 +68,10 @@ interface FluxConfig extends BaseConfig {
 const FLUX_MODEL_CONFIG: Record<string, FluxConfig> = {
   schnell: { defaultSteps: 4, maxSteps: 10, maxAttempts: 30, timeout: 60 },
   dev: { defaultSteps: 25, maxSteps: 40, maxAttempts: 30, timeout: 120 },
+  inpaint: { defaultSteps: 25, maxSteps: 40, maxAttempts: 30, timeout: 120 },
+  outpaint: { defaultSteps: 25, maxSteps: 40, maxAttempts: 30, timeout: 120 },
+  variation: { defaultSteps: 25, maxSteps: 40, maxAttempts: 30, timeout: 120 },
+  controlnet: { defaultSteps: 25, maxSteps: 40, maxAttempts: 30, timeout: 180 },
 };
 
 function registerFluxTool(server: FastMCP) {
@@ -75,11 +80,18 @@ function registerFluxTool(server: FastMCP) {
     description: "Generate a image using PiAPI Flux",
     parameters: z.object({
       prompt: z.string().describe("The prompt to generate an image from"),
-      negative_prompt: z
+      negativePrompt: z
         .string()
-        .describe("The negative prompt to generate an image from")
         .optional()
-        .default("chaos, bad photo, low quality, low resolution"),
+        .default("chaos, bad photo, low quality, low resolution")
+        .describe("The negative prompt to generate an image from"),
+      referenceImage: z
+        .string()
+        .url()
+        .optional()
+        .describe(
+          "The reference image to generate an image from, must be a valid image url"
+        ),
       width: z
         .union([z.string(), z.number()])
         .transform((val) => (typeof val === "string" ? parseInt(val) : val))
@@ -105,7 +117,13 @@ function registerFluxTool(server: FastMCP) {
         .default(0)
         .describe("The number of steps to generate the image"),
       lora: z
-        .enum(["", "mystic-realism", "ob3d-isometric-3d-room", "remes-abstract-poster-style", "paper-quilling-and-layering-style"])
+        .enum([
+          "",
+          "mystic-realism",
+          "ob3d-isometric-3d-room",
+          "remes-abstract-poster-style",
+          "paper-quilling-and-layering-style",
+        ])
         .optional()
         .default("")
         .describe(
@@ -119,8 +137,11 @@ function registerFluxTool(server: FastMCP) {
           "The model to use for image generation, 'schnell' is faster and cheaper but less detailed, 'dev' is slower but more detailed"
         ),
     }),
-    execute: async (args, { log }) => {
+    execute: async (args, { log, reportProgress }) => {
       // Create image generation task
+      if (!args.prompt) {
+        throw new UserError("Prompt is required");
+      }
       const config = FLUX_MODEL_CONFIG[args.model];
       let steps = args.steps || config.defaultSteps;
       steps = Math.min(steps, config.maxSteps);
@@ -129,18 +150,19 @@ function registerFluxTool(server: FastMCP) {
       if (args.lora !== "") {
         requestBody = JSON.stringify({
           model: "Qubico/flux1-dev-advanced",
-          task_type: "txt2img-lora",
+          task_type: args.referenceImage ? "img2img-lora" : "txt2img-lora",
           input: {
             prompt: args.prompt,
-            negative_prompt: args.negative_prompt,
+            negative_prompt: args.negativePrompt,
+            image: args.referenceImage,
             width: args.width,
             height: args.height,
             steps: steps,
-            "lora_settings": [
+            lora_settings: [
               {
-                "lora_type": args.lora,
-              }
-            ]
+                lora_type: args.lora,
+              },
+            ],
           },
         });
       } else {
@@ -149,10 +171,11 @@ function registerFluxTool(server: FastMCP) {
             args.model === "schnell"
               ? "Qubico/flux1-schnell"
               : "Qubico/flux1-dev",
-          task_type: "txt2img",
+          task_type: args.referenceImage ? "img2img" : "txt2img",
           input: {
             prompt: args.prompt,
-            negative_prompt: args.negative_prompt,
+            negative_prompt: args.negativePrompt,
+            image: args.referenceImage,
             width: args.width,
             height: args.height,
             steps: steps,
@@ -160,7 +183,303 @@ function registerFluxTool(server: FastMCP) {
         });
       }
 
-      const { usage, output } = await handleTask(log, requestBody, config);
+      const { usage, output } = await handleTask(log, reportProgress, requestBody, config);
+
+      const urls = parseImageOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+              "\n"
+            )}`,
+          },
+        ],
+      };
+    },
+  });
+  server.addTool({
+    name: "modify_image",
+    description: "Modify a image using PiAPI Flux, inpaint or outpaint",
+    parameters: z.object({
+      prompt: z.string().describe("The prompt to modify an image from"),
+      negativePrompt: z
+        .string()
+        .optional()
+        .default("chaos, bad photo, low quality, low resolution")
+        .describe("The negative prompt to modify an image from"),
+      referenceImage: z
+        .string()
+        .url()
+        .describe(
+          "The reference image to modify an image from, must be a valid image url"
+        ),
+      paddingLeft: z
+        .union([z.string(), z.number()])
+        .transform((val) => (typeof val === "string" ? parseInt(val) : val))
+        .optional()
+        .default(0)
+        .describe("The padding left of the image, only available for outpaint"),
+      paddingRight: z
+        .union([z.string(), z.number()])
+        .transform((val) => (typeof val === "string" ? parseInt(val) : val))
+        .optional()
+        .default(0)
+        .describe(
+          "The padding right of the image, only available for outpaint"
+        ),
+      paddingTop: z
+        .union([z.string(), z.number()])
+        .transform((val) => (typeof val === "string" ? parseInt(val) : val))
+        .optional()
+        .default(0)
+        .describe("The padding top of the image, only available for outpaint"),
+      paddingBottom: z
+        .union([z.string(), z.number()])
+        .transform((val) => (typeof val === "string" ? parseInt(val) : val))
+        .optional()
+        .default(0)
+        .describe(
+          "The padding bottom of the image, only available for outpaint"
+        ),
+      steps: z
+        .union([z.string(), z.number()])
+        .transform((val) => (typeof val === "string" ? parseInt(val) : val))
+        .optional()
+        .default(0)
+        .describe("The number of steps to generate the image"),
+      model: z
+        .enum(["inpaint", "outpaint"])
+        .describe("The model to use for image modification"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create image generation task
+      if (!args.prompt) {
+        throw new UserError("Prompt is required");
+      } else if (!args.referenceImage) {
+        throw new UserError("Reference image is required");
+      }
+      const config = FLUX_MODEL_CONFIG[args.model];
+      let steps = args.steps || config.defaultSteps;
+      steps = Math.min(steps, config.maxSteps);
+
+      let requestBody = "";
+      if (args.model === "inpaint") {
+        requestBody = JSON.stringify({
+          model: "Qubico/flux1-dev-advanced",
+          task_type: "fill-inpaint",
+          input: {
+            prompt: args.prompt,
+            negative_prompt: args.negativePrompt,
+            image: args.referenceImage,
+            steps: steps,
+          },
+        });
+      } else {
+        requestBody = JSON.stringify({
+          model: "Qubico/flux1-dev-advanced",
+          task_type: "fill-outpaint",
+          input: {
+            prompt: args.prompt,
+            negative_prompt: args.negativePrompt,
+            image: args.referenceImage,
+            steps: steps,
+            custom_settings: [
+              {
+                setting_type: "outpaint",
+                outpaint_left: args.paddingLeft,
+                outpaint_right: args.paddingRight,
+                outpaint_top: args.paddingTop,
+                outpaint_bottom: args.paddingBottom,
+              },
+            ],
+          },
+        });
+      }
+
+      const { usage, output } = await handleTask(log, reportProgress, requestBody, config);
+
+      const urls = parseImageOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+              "\n"
+            )}`,
+          },
+        ],
+      };
+    },
+  });
+  server.addTool({
+    name: "derive_image",
+    description: "Derive a image using PiAPI Flux, variation",
+    parameters: z.object({
+      prompt: z.string().describe("The prompt to derive an image from"),
+      negativePrompt: z
+        .string()
+        .optional()
+        .default("chaos, bad photo, low quality, low resolution")
+        .describe("The negative prompt to derive an image from"),
+      referenceImage: z
+        .string()
+        .url()
+        .describe(
+          "The reference image to derive an image from, must be a valid image url"
+        ),
+      width: z
+        .union([z.string(), z.number()])
+        .transform((val) => (typeof val === "string" ? parseInt(val) : val))
+        .pipe(z.number().min(128).max(1024))
+        .optional()
+        .default(1024)
+        .describe(
+          "The width of the image to generate, must be between 128 and 1024, defaults to 1024"
+        ),
+      height: z
+        .union([z.string(), z.number()])
+        .transform((val) => (typeof val === "string" ? parseInt(val) : val))
+        .pipe(z.number().min(128).max(1024))
+        .optional()
+        .default(1024)
+        .describe(
+          "The height of the image to generate, must be between 128 and 1024, defaults to 1024"
+        ),
+      steps: z
+        .union([z.string(), z.number()])
+        .transform((val) => (typeof val === "string" ? parseInt(val) : val))
+        .optional()
+        .default(0)
+        .describe("The number of steps to generate the image"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create image generation task
+      if (!args.prompt) {
+        throw new UserError("Prompt is required");
+      } else if (!args.referenceImage) {
+        throw new UserError("Reference image is required");
+      }
+      const config = FLUX_MODEL_CONFIG["variation"];
+      let steps = args.steps || config.defaultSteps;
+      steps = Math.min(steps, config.maxSteps);
+
+      let requestBody = JSON.stringify({
+        model: "Qubico/flux1-dev-advanced",
+        task_type: "redux-variation",
+        input: {
+          prompt: args.prompt,
+          negative_prompt: args.negativePrompt,
+          image: args.referenceImage,
+          width: args.width,
+          height: args.height,
+          steps: steps,
+        },
+      });
+
+      const { usage, output } = await handleTask(log, reportProgress, requestBody, config);
+
+      const urls = parseImageOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+              "\n"
+            )}`,
+          },
+        ],
+      };
+    },
+  });
+  server.addTool({
+    name: "generate_image_controlnet",
+    description: "Generate a image using PiAPI Flux with ControlNet",
+    parameters: z.object({
+      prompt: z.string().describe("The prompt to generate an image from"),
+      negativePrompt: z
+        .string()
+        .optional()
+        .default("chaos, bad photo, low quality, low resolution")
+        .describe("The negative prompt to generate an image from"),
+      referenceImage: z
+        .string()
+        .url()
+        .describe(
+          "The reference image to generate an image from, must be a valid image url"
+        ),
+      width: z
+        .union([z.string(), z.number()])
+        .transform((val) => (typeof val === "string" ? parseInt(val) : val))
+        .pipe(z.number().min(128).max(1024))
+        .optional()
+        .default(1024)
+        .describe(
+          "The width of the image to generate, must be between 128 and 1024, defaults to 1024"
+        ),
+      height: z
+        .union([z.string(), z.number()])
+        .transform((val) => (typeof val === "string" ? parseInt(val) : val))
+        .pipe(z.number().min(128).max(1024))
+        .optional()
+        .default(1024)
+        .describe(
+          "The height of the image to generate, must be between 128 and 1024, defaults to 1024"
+        ),
+      steps: z
+        .union([z.string(), z.number()])
+        .transform((val) => (typeof val === "string" ? parseInt(val) : val))
+        .optional()
+        .default(0)
+        .describe("The number of steps to generate the image"),
+      lora: z
+        .enum([
+          "",
+          "mystic-realism",
+          "ob3d-isometric-3d-room",
+          "remes-abstract-poster-style",
+          "paper-quilling-and-layering-style",
+        ])
+        .optional()
+        .default("")
+        .describe("The lora to use for image generation"),
+      controlType: z
+        .enum(["depth", "canny", "hed", "openpose"])
+        .optional()
+        .default("depth")
+        .describe("The control type to use for image generation"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create image generation task
+      if (!args.prompt) {
+        throw new UserError("Prompt is required");
+      } else if (!args.referenceImage) {
+        throw new UserError("Reference image is required");
+      }
+      const config = FLUX_MODEL_CONFIG["controlnet"];
+      let steps = args.steps || config.defaultSteps;
+      steps = Math.min(steps, config.maxSteps);
+
+      let requestBody = JSON.stringify({
+        model: "Qubico/flux1-dev-advanced",
+        task_type: "controlnet-lora",
+        input: {
+          prompt: args.prompt,
+          negative_prompt: args.negativePrompt,
+          width: args.width,
+          height: args.height,
+          steps: steps,
+          lora_settings: args.lora !== "" ? [{ lora_type: args.lora }] : [],
+          control_net_settings: [
+            {
+              control_type: args.controlType,
+              control_image: args.referenceImage,
+            },
+          ],
+        },
+      });
+
+      const { usage, output } = await handleTask(log, reportProgress, requestBody, config);
 
       const urls = parseImageOutput(output);
       return {
@@ -177,9 +496,15 @@ function registerFluxTool(server: FastMCP) {
   });
 }
 
-const HUNYUAN_MODEL_CONFIG: Record<string, BaseConfig> = {
-  hunyuan: { maxAttempts: 60, timeout: 900 },
-  fastHunyuan: { maxAttempts: 60, timeout: 600 },
+interface HunyuanConfig extends BaseConfig {
+  taskType: string;
+}
+
+const HUNYUAN_MODEL_CONFIG: Record<string, HunyuanConfig> = {
+  hunyuan: { maxAttempts: 60, timeout: 900, taskType: "txt2video" },
+  fastHunyuan: { maxAttempts: 60, timeout: 600, taskType: "fast-txt2video" },
+  hunyuanConcat: { maxAttempts: 60, timeout: 900, taskType: "img2video-concat" },
+  hunyuanReplace: { maxAttempts: 60, timeout: 900, taskType: "img2video-replace" },
 };
 
 function registerHunyuanTool(server: FastMCP) {
@@ -188,12 +513,19 @@ function registerHunyuanTool(server: FastMCP) {
     description: "Generate a video using PiAPI Hunyuan",
     parameters: z.object({
       prompt: z.string().describe("The prompt to generate a video from"),
-      negative_prompt: z
+      negativePrompt: z
         .string()
         .describe("The negative prompt to generate a video from")
         .optional()
         .default("chaos, bad video, low quality, low resolution"),
-      aspect_ratio: z
+      referenceImage: z
+        .string()
+        .url()
+        .optional()
+        .describe(
+          "The reference image to generate a video from, must be a valid image url"
+        ),
+      aspectRatio: z
         .enum(["16:9", "1:1", "9:16"])
         .optional()
         .default("16:9")
@@ -201,27 +533,35 @@ function registerHunyuanTool(server: FastMCP) {
           "The aspect ratio of the video to generate, must be either '16:9', '1:1', or '9:16', defaults to '16:9'"
         ),
       model: z
-        .enum(["hunyuan", "fastHunyuan"])
+        .enum(["hunyuan", "fastHunyuan", "hunyuanConcat", "hunyuanReplace"])
         .optional()
         .default("hunyuan")
         .describe(
-          "The model to use for video generation, must be either 'hunyuan' or 'fastHunyuan', 'hunyuan' is slower but more detailed, 'fastHunyuan' is faster but less detailed"
+          "The model to use for video generation, 'hunyuan' is slower but more detailed, 'fastHunyuan' is faster but less detailed, both for txt2video. 'hunyuanReplace' sticks to reference image, and 'hunyuanConcat' allows for more creative movement, both for img2video"
         ),
     }),
-    execute: async (args, { log }) => {
+    execute: async (args, { log, reportProgress }) => {
       // Create video generation task
+      if (!args.prompt) {
+        throw new UserError("Prompt is required");
+      }
+      if (args.referenceImage && (args.model === "hunyuan" || args.model === "fastHunyuan")) {
+        log.warn("Reference image is not supported for 'hunyuan' or 'fastHunyuan' model, using 'hunyuanConcat' as default");
+        args.model = "hunyuanConcat";
+      }
       const config = HUNYUAN_MODEL_CONFIG[args.model];
 
       const requestBody = JSON.stringify({
         model: "Qubico/hunyuan",
-        task_type: args.model === "hunyuan" ? "txt2video" : "fast-txt2video",
+        task_type: config.taskType,
         input: {
+          image: args.referenceImage,
           prompt: args.prompt,
-          negative_prompt: args.negative_prompt,
-          aspect_ratio: args.aspect_ratio,
+          negative_prompt: args.negativePrompt,
+          aspect_ratio: args.aspectRatio,
         },
       });
-      const { usage, output } = await handleTask(log, requestBody, config);
+      const { usage, output } = await handleTask(log, reportProgress, requestBody, config);
 
       const url = parseVideoOutput(output);
       return {
@@ -247,17 +587,24 @@ function registerWanTool(server: FastMCP) {
     description: "Generate a video using PiAPI Wan",
     parameters: z.object({
       prompt: z.string().describe("The prompt to generate a video from"),
-      negative_prompt: z
+      negativePrompt: z
         .string()
         .describe("The negative prompt to generate a video from")
         .optional()
         .default("chaos, bad video, low quality, low resolution"),
-      aspect_ratio: z
+      aspectRatio: z
         .enum(["16:9", "1:1", "9:16"])
         .optional()
         .default("16:9")
         .describe(
           "The aspect ratio of the video to generate, must be either '16:9', '1:1', or '9:16', defaults to '16:9'"
+        ),
+      referenceImage: z
+        .string()
+        .url()
+        .optional()
+        .describe(
+          "The reference image to generate a video from, must be a valid image url, only available for 'wan14b' model"
         ),
       model: z
         .enum(["wan1_3b", "wan14b"])
@@ -267,20 +614,30 @@ function registerWanTool(server: FastMCP) {
           "The model to use for video generation, must be either 'wan1_3b' or 'wan14b', 'wan1_3b' is faster but less detailed, 'wan14b' is slower but more detailed"
         ),
     }),
-    execute: async (args, { log }) => {
+    execute: async (args, { log, reportProgress }) => {
       // Create video generation task
+      if (!args.prompt) {
+        throw new UserError("Prompt is required");
+      }
+      let taskType =
+        args.model === "wan1_3b" ? "txt2video-1.3b" : "txt2video-14b";
+      if (args.referenceImage) {
+        args.model = "wan14b";
+        taskType = "img2video-14b";
+      }
       const config = WAN_MODEL_CONFIG[args.model];
 
       const requestBody = JSON.stringify({
         model: "Qubico/wanx",
-        task_type: args.model === "wan1_3b" ? "txt2video-1.3b" : "txt2video-14b",
+        task_type: taskType,
         input: {
           prompt: args.prompt,
-          negative_prompt: args.negative_prompt,
-          aspect_ratio: args.aspect_ratio,
+          negative_prompt: args.negativePrompt,
+          aspect_ratio: args.aspectRatio,
+          image: args.referenceImage,
         },
       });
-      const { usage, output } = await handleTask(log, requestBody, config);
+      const { usage, output } = await handleTask(log, reportProgress, requestBody, config);
 
       const url = parseVideoOutput(output);
       return {
@@ -296,10 +653,10 @@ function registerWanTool(server: FastMCP) {
 }
 
 // Task handler
-async function handleTask(log: any, requestBody: string, config: BaseConfig) {
+async function handleTask(log: any, reportProgress: (progress: Progress) => Promise<void>, requestBody: string, config: BaseConfig) {
   const taskId = await createTask(requestBody);
   log.info(`Task created with ID: ${taskId}`);
-  return await getTaskResult(log, taskId, config.maxAttempts, config.timeout);
+  return await getTaskResult(log, reportProgress, taskId, config.maxAttempts, config.timeout);
 }
 
 async function createTask(requestBody: string) {
@@ -324,12 +681,18 @@ async function createTask(requestBody: string) {
 
 async function getTaskResult(
   log: any,
+  reportProgress: (progress: Progress) => Promise<void>,
   taskId: string,
   maxAttempts: number,
   timeout: number
 ) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     log.info(`Checking task status (attempt ${attempt + 1})...`);
+
+    reportProgress({
+      progress: attempt / maxAttempts * 100,
+      total: 100,
+    });
 
     const statusResponse = await fetch(
       `https://api.piapi.ai/api/v1/task/${taskId}`,
