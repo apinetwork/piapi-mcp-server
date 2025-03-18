@@ -9,8 +9,14 @@ A TypeScript implementation of a Model Context Protocol (MCP) server that integr
 
 ## Features (more coming soon)
 
+- [ ] Base Image toolkit
+- [ ] Base Video toolkit
 - [x] Flux Image generation from text descriptions
 - [ ] Flux Image generation with image prompt
+- [x] Hunyuan Video generation from text descriptions
+- [ ] Hunyuan Video generation from image prompt
+- [x] Wan Video generation from text descriptions
+- [ ] Wan Video generation from image prompt
 - [ ] Midjourney Image generation
 - [ ] Kling video generation
 - [ ] Luma Dream Machine video generation
@@ -90,13 +96,16 @@ Add this to your Claude Desktop configuration file (`~/Library/Application Suppo
 }
 ```
 
+After updating your configuration file, you need to restart Claude for Desktop. Upon restarting, you should see a hammer icon in the bottom right corner of the input box.
+For more detailed information, visit the [official MCP documentation](https://modelcontextprotocol.io/quickstart/user)
+
 ### Connecting to Cursor
 
 Note: Following guide is based on Cursor 0.47.5. Features and behaviors may vary in different versions.
 
 To configure the MCP server:
 
-1. Navigate to: File > Preferences > Cursor Settings
+1. Navigate to: File > Preferences > Cursor Settings, or use the shortcut key `Ctrl+Shift+J`
 2. Select "MCP" tab on the left panel
 3. Click "Add new global MCP server" button in the top right
 4. Add your configuration in the opened mcp.json file
