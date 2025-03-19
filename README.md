@@ -28,7 +28,7 @@ Note: Time-consuming tools like video generation may not complete due to Claude'
 - [ ] Workflow planning inside LLMs
 
 ## Working with Claude Desktop
-![image](https://github.com/user-attachments/assets/a7567797-47e1-43dd-9505-f2677f9fa4f6)
+![image](./assets/Claude-desktop.png)
 
 
 ## Prerequisites
