@@ -18,8 +18,11 @@ const server = new FastMCP({
 
 // Register tools
 registerGeneralTool(server);
+registerImageTool(server);
+registerVideoTool(server);
 registerFluxTool(server);
 registerHunyuanTool(server);
+registerSkyreelsTool(server);
 registerWanTool(server);
 
 // Start the server
@@ -58,6 +61,302 @@ function registerGeneralTool(server: FastMCP) {
 interface BaseConfig {
   maxAttempts: number;
   timeout: number; // in seconds
+}
+
+const IMAGE_TOOL_CONFIG: Record<string, BaseConfig> = {
+  faceswap: { maxAttempts: 30, timeout: 60 },
+  rmbg: { maxAttempts: 30, timeout: 60 },
+  segment: { maxAttempts: 30, timeout: 60 },
+  upscale: { maxAttempts: 30, timeout: 60 },
+};
+
+function registerImageTool(server: FastMCP) {
+  server.addTool({
+    name: "image_faceswap",
+    description: "Faceswap an image",
+    parameters: z.object({
+      swapImage: z.string().url().describe("The URL of the image to swap"),
+      targetImage: z.string().url().describe("The URL of the target image"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create image generation task
+      if (!args.swapImage || !args.targetImage) {
+        throw new UserError("Swap image and target image are required");
+      }
+      const config = IMAGE_TOOL_CONFIG["faceswap"];
+
+      let requestBody = JSON.stringify({
+        model: "Qubico/image-toolkit",
+        task_type: "face-swap",
+        input: {
+          swap_image: args.swapImage,
+          target_image: args.targetImage,
+        },
+      });
+
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const urls = parseImageOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+              "\n"
+            )}`,
+          },
+        ],
+      };
+    },
+  });
+  server.addTool({
+    name: "image_rmbg",
+    description: "Remove the background of an image",
+    parameters: z.object({
+      url: z
+        .string()
+        .url()
+        .describe("The URL of the image to remove the background"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create image generation task
+      if (!args.url) {
+        throw new UserError("Image URL is required");
+      }
+      const config = IMAGE_TOOL_CONFIG["rmbg"];
+
+      let requestBody = JSON.stringify({
+        model: "Qubico/image-toolkit",
+        task_type: "background-remove",
+        input: {
+          image: args.url,
+        },
+      });
+
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const urls = parseImageOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+              "\n"
+            )}`,
+          },
+        ],
+      };
+    },
+  });
+  server.addTool({
+    name: "image_segment",
+    description: "Segment an image",
+    parameters: z.object({
+      url: z.string().url().describe("The URL of the image to segment"),
+      prompt: z.string().describe("The prompt to segment the image"),
+      negativePrompt: z
+        .string()
+        .optional()
+        .describe("The negative prompt to segment the image"),
+      segmentFactor: z
+        .number()
+        .optional()
+        .default(-15)
+        .describe("The factor to segment the image"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create image generation task
+      if (!args.url || !args.prompt) {
+        throw new UserError("Image URL and prompt are required");
+      }
+      const config = IMAGE_TOOL_CONFIG["segment"];
+
+      let requestBody = JSON.stringify({
+        model: "Qubico/image-toolkit",
+        task_type: "segment",
+        input: {
+          image: args.url,
+          prompt: args.prompt,
+          negative_prompt: args.negativePrompt,
+          segment_factor: args.segmentFactor,
+        },
+      });
+
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const urls = parseImageOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+              "\n"
+            )}`,
+          },
+        ],
+      };
+    },
+  });
+  server.addTool({
+    name: "image_upscale",
+    description: "Upscale an image to a higher resolution",
+    parameters: z.object({
+      url: z.string().url().describe("The URL of the image to upscale"),
+      scale: z
+        .number()
+        .pipe(z.number().min(2).max(10))
+        .optional()
+        .default(2)
+        .describe("The scale of the image to upscale, defaults to 2"),
+      faceEnhance: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("Whether to enhance the face of the image"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create image generation task
+      if (!args.url) {
+        throw new UserError("Image URL is required");
+      }
+      const config = IMAGE_TOOL_CONFIG["upscale"];
+
+      let requestBody = JSON.stringify({
+        model: "Qubico/image-toolkit",
+        task_type: "upscale",
+        input: {
+          image: args.url,
+          scale: args.scale,
+          face_enhance: args.faceEnhance,
+        },
+      });
+
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const urls = parseImageOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+              "\n"
+            )}`,
+          },
+        ],
+      };
+    },
+  });
+}
+
+const VIDEO_TOOL_CONFIG: Record<string, BaseConfig> = {
+  faceswap: { maxAttempts: 30, timeout: 600 },
+  upscale: { maxAttempts: 30, timeout: 300 },
+};
+
+function registerVideoTool(server: FastMCP) {
+  server.addTool({
+    name: "video_faceswap",
+    description: "Faceswap a video",
+    parameters: z.object({
+      swapImage: z.string().url().describe("The URL of the image to swap"),
+      targetVideo: z
+        .string()
+        .url()
+        .describe("The URL of the video to faceswap"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create image generation task
+      if (!args.swapImage || !args.targetVideo) {
+        throw new UserError("Swap image and target video are required");
+      }
+      const config = VIDEO_TOOL_CONFIG["faceswap"];
+
+      let requestBody = JSON.stringify({
+        model: "Qubico/video-toolkit",
+        task_type: "face-swap",
+        input: {
+          swap_image: args.swapImage,
+          target_video: args.targetVideo,
+        },
+      });
+
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const url = parseVideoOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Video generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
+          },
+        ],
+      };
+    },
+  });
+  server.addTool({
+    name: "video_upscale",
+    description: "Upscale video resolution to 2x",
+    parameters: z.object({
+      url: z.string().url().describe("The URL of the video to upscale"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create image generation task
+      if (!args.url) {
+        throw new UserError("Video URL is required");
+      }
+      const config = VIDEO_TOOL_CONFIG["upscale"];
+
+      let requestBody = JSON.stringify({
+        model: "Qubico/video-toolkit",
+        task_type: "upscale",
+        input: {
+          video: args.url,
+        },
+      });
+
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const url = parseVideoOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Video generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
+          },
+        ],
+      };
+    },
+  });
 }
 
 interface FluxConfig extends BaseConfig {
@@ -183,7 +482,12 @@ function registerFluxTool(server: FastMCP) {
         });
       }
 
-      const { usage, output } = await handleTask(log, reportProgress, requestBody, config);
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
 
       const urls = parseImageOutput(output);
       return {
@@ -297,7 +601,12 @@ function registerFluxTool(server: FastMCP) {
         });
       }
 
-      const { usage, output } = await handleTask(log, reportProgress, requestBody, config);
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
 
       const urls = parseImageOutput(output);
       return {
@@ -377,7 +686,12 @@ function registerFluxTool(server: FastMCP) {
         },
       });
 
-      const { usage, output } = await handleTask(log, reportProgress, requestBody, config);
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
 
       const urls = parseImageOutput(output);
       return {
@@ -479,7 +793,12 @@ function registerFluxTool(server: FastMCP) {
         },
       });
 
-      const { usage, output } = await handleTask(log, reportProgress, requestBody, config);
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
 
       const urls = parseImageOutput(output);
       return {
@@ -503,8 +822,16 @@ interface HunyuanConfig extends BaseConfig {
 const HUNYUAN_MODEL_CONFIG: Record<string, HunyuanConfig> = {
   hunyuan: { maxAttempts: 60, timeout: 900, taskType: "txt2video" },
   fastHunyuan: { maxAttempts: 60, timeout: 600, taskType: "fast-txt2video" },
-  hunyuanConcat: { maxAttempts: 60, timeout: 900, taskType: "img2video-concat" },
-  hunyuanReplace: { maxAttempts: 60, timeout: 900, taskType: "img2video-replace" },
+  hunyuanConcat: {
+    maxAttempts: 60,
+    timeout: 900,
+    taskType: "img2video-concat",
+  },
+  hunyuanReplace: {
+    maxAttempts: 60,
+    timeout: 900,
+    taskType: "img2video-replace",
+  },
 };
 
 function registerHunyuanTool(server: FastMCP) {
@@ -545,8 +872,13 @@ function registerHunyuanTool(server: FastMCP) {
       if (!args.prompt) {
         throw new UserError("Prompt is required");
       }
-      if (args.referenceImage && (args.model === "hunyuan" || args.model === "fastHunyuan")) {
-        log.warn("Reference image is not supported for 'hunyuan' or 'fastHunyuan' model, using 'hunyuanConcat' as default");
+      if (
+        args.referenceImage &&
+        (args.model === "hunyuan" || args.model === "fastHunyuan")
+      ) {
+        log.warn(
+          "Reference image is not supported for 'hunyuan' or 'fastHunyuan' model, using 'hunyuanConcat' as default"
+        );
         args.model = "hunyuanConcat";
       }
       const config = HUNYUAN_MODEL_CONFIG[args.model];
@@ -561,7 +893,78 @@ function registerHunyuanTool(server: FastMCP) {
           aspect_ratio: args.aspectRatio,
         },
       });
-      const { usage, output } = await handleTask(log, reportProgress, requestBody, config);
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const url = parseVideoOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Video generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
+          },
+        ],
+      };
+    },
+  });
+}
+
+const SKYREELS_MODEL_CONFIG: Record<string, BaseConfig> = {
+  skyreels: { maxAttempts: 30, timeout: 300 },
+};
+
+function registerSkyreelsTool(server: FastMCP) {
+  server.addTool({
+    name: "generate_video_skyreels",
+    description: "Generate a video using PiAPI Skyreels",
+    parameters: z.object({
+      prompt: z.string().describe("The prompt to generate a video from"),
+      negativePrompt: z
+        .string()
+        .describe("The negative prompt to generate a video from")
+        .optional()
+        .default("chaos, bad video, low quality, low resolution"),
+      aspectRatio: z
+        .enum(["16:9", "1:1", "9:16"])
+        .optional()
+        .default("16:9")
+        .describe(
+          "The aspect ratio of the video to generate, must be either '16:9', '1:1', or '9:16', defaults to '16:9'"
+        ),
+      referenceImage: z
+        .string()
+        .url()
+        .describe(
+          "The reference image to generate a video from, must be a valid image url, only available for 'wan14b' model"
+        ),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create video generation task
+      if (!args.prompt || !args.referenceImage) {
+        throw new UserError("Prompt and reference image are required");
+      }
+      const config = SKYREELS_MODEL_CONFIG["skyreels"];
+
+      const requestBody = JSON.stringify({
+        model: "Qubico/skyreels",
+        task_type: "img2video",
+        input: {
+          prompt: args.prompt,
+          negative_prompt: args.negativePrompt,
+          aspect_ratio: args.aspectRatio,
+          image: args.referenceImage,
+        },
+      });
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
 
       const url = parseVideoOutput(output);
       return {
@@ -637,7 +1040,12 @@ function registerWanTool(server: FastMCP) {
           image: args.referenceImage,
         },
       });
-      const { usage, output } = await handleTask(log, reportProgress, requestBody, config);
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
 
       const url = parseVideoOutput(output);
       return {
@@ -653,10 +1061,21 @@ function registerWanTool(server: FastMCP) {
 }
 
 // Task handler
-async function handleTask(log: any, reportProgress: (progress: Progress) => Promise<void>, requestBody: string, config: BaseConfig) {
+async function handleTask(
+  log: any,
+  reportProgress: (progress: Progress) => Promise<void>,
+  requestBody: string,
+  config: BaseConfig
+) {
   const taskId = await createTask(requestBody);
   log.info(`Task created with ID: ${taskId}`);
-  return await getTaskResult(log, reportProgress, taskId, config.maxAttempts, config.timeout);
+  return await getTaskResult(
+    log,
+    reportProgress,
+    taskId,
+    config.maxAttempts,
+    config.timeout
+  );
 }
 
 async function createTask(requestBody: string) {
@@ -690,7 +1109,7 @@ async function getTaskResult(
     log.info(`Checking task status (attempt ${attempt + 1})...`);
 
     reportProgress({
-      progress: attempt / maxAttempts * 100,
+      progress: (attempt / maxAttempts) * 100,
       total: 100,
     });
 
