@@ -11,13 +11,13 @@ A TypeScript implementation of a Model Context Protocol (MCP) server that integr
 
 Note: Time-consuming tools like video generation may not complete due to Claude's timeout limitations
 
-- [ ] Base Image toolkit
-- [ ] Base Video toolkit
+- [x] Base Image toolkit
+- [x] Base Video toolkit
 - [x] Flux Image generation from text descriptions
 - [x] Flux Image generation with image prompt
 - [x] Hunyuan Video generation from text descriptions
 - [x] Hunyuan Video generation from image prompt
-- [ ] Skyreels Video generation from image prompt
+- [x] Skyreels Video generation from image prompt
 - [x] Wan Video generation from text descriptions
 - [x] Wan Video generation from image prompt
 - [ ] Midjourney Image generation
