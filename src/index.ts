@@ -16,14 +16,7 @@ const server = new FastMCP({
   version: "1.0.0",
 });
 
-// Register tools
-registerGeneralTool(server);
-registerImageTool(server);
-registerVideoTool(server);
-registerFluxTool(server);
-registerHunyuanTool(server);
-registerSkyreelsTool(server);
-registerWanTool(server);
+registerTools(server);
 
 // Start the server
 async function main() {
@@ -41,6 +34,19 @@ main().catch((error) => {
   console.error("Fatal error in main():", error);
   process.exit(1);
 });
+
+// Register Tools
+function registerTools(server: FastMCP) {
+  registerGeneralTool(server);
+  registerImageTool(server);
+  registerVideoTool(server);
+  registerFluxTool(server);
+  registerHunyuanTool(server);
+  registerSkyreelsTool(server);
+  registerWanTool(server);
+  registerMMAudioTool(server);
+  registerTrellisTool(server);
+}
 
 // Tool Definitions
 
@@ -118,14 +124,14 @@ function registerImageTool(server: FastMCP) {
     name: "image_rmbg",
     description: "Remove the background of an image",
     parameters: z.object({
-      url: z
+      image: z
         .string()
         .url()
         .describe("The URL of the image to remove the background"),
     }),
     execute: async (args, { log, reportProgress }) => {
       // Create image generation task
-      if (!args.url) {
+      if (!args.image) {
         throw new UserError("Image URL is required");
       }
       const config = IMAGE_TOOL_CONFIG["rmbg"];
@@ -134,7 +140,7 @@ function registerImageTool(server: FastMCP) {
         model: "Qubico/image-toolkit",
         task_type: "background-remove",
         input: {
-          image: args.url,
+          image: args.image,
         },
       });
 
@@ -162,7 +168,7 @@ function registerImageTool(server: FastMCP) {
     name: "image_segment",
     description: "Segment an image",
     parameters: z.object({
-      url: z.string().url().describe("The URL of the image to segment"),
+      image: z.string().url().describe("The URL of the image to segment"),
       prompt: z.string().describe("The prompt to segment the image"),
       negativePrompt: z
         .string()
@@ -176,7 +182,7 @@ function registerImageTool(server: FastMCP) {
     }),
     execute: async (args, { log, reportProgress }) => {
       // Create image generation task
-      if (!args.url || !args.prompt) {
+      if (!args.image || !args.prompt) {
         throw new UserError("Image URL and prompt are required");
       }
       const config = IMAGE_TOOL_CONFIG["segment"];
@@ -185,7 +191,7 @@ function registerImageTool(server: FastMCP) {
         model: "Qubico/image-toolkit",
         task_type: "segment",
         input: {
-          image: args.url,
+          image: args.image,
           prompt: args.prompt,
           negative_prompt: args.negativePrompt,
           segment_factor: args.segmentFactor,
@@ -216,7 +222,7 @@ function registerImageTool(server: FastMCP) {
     name: "image_upscale",
     description: "Upscale an image to a higher resolution",
     parameters: z.object({
-      url: z.string().url().describe("The URL of the image to upscale"),
+      image: z.string().url().describe("The URL of the image to upscale"),
       scale: z
         .number()
         .pipe(z.number().min(2).max(10))
@@ -231,7 +237,7 @@ function registerImageTool(server: FastMCP) {
     }),
     execute: async (args, { log, reportProgress }) => {
       // Create image generation task
-      if (!args.url) {
+      if (!args.image) {
         throw new UserError("Image URL is required");
       }
       const config = IMAGE_TOOL_CONFIG["upscale"];
@@ -240,7 +246,7 @@ function registerImageTool(server: FastMCP) {
         model: "Qubico/image-toolkit",
         task_type: "upscale",
         input: {
-          image: args.url,
+          image: args.image,
           scale: args.scale,
           face_enhance: args.faceEnhance,
         },
@@ -322,11 +328,11 @@ function registerVideoTool(server: FastMCP) {
     name: "video_upscale",
     description: "Upscale video resolution to 2x",
     parameters: z.object({
-      url: z.string().url().describe("The URL of the video to upscale"),
+      video: z.string().url().describe("The URL of the video to upscale"),
     }),
     execute: async (args, { log, reportProgress }) => {
       // Create image generation task
-      if (!args.url) {
+      if (!args.video) {
         throw new UserError("Video URL is required");
       }
       const config = VIDEO_TOOL_CONFIG["upscale"];
@@ -335,7 +341,7 @@ function registerVideoTool(server: FastMCP) {
         model: "Qubico/video-toolkit",
         task_type: "upscale",
         input: {
-          video: args.url,
+          video: args.video,
         },
       });
 
@@ -1060,6 +1066,104 @@ function registerWanTool(server: FastMCP) {
   });
 }
 
+const MMAUDIO_MODEL_CONFIG: Record<string, BaseConfig> = {
+  mmaudio: { maxAttempts: 30, timeout: 600 },
+};
+
+function registerMMAudioTool(server: FastMCP) {
+  server.addTool({
+    name: "generate_music_for_video",
+    description: "Generate a music for a video using PiAPI MMAudio",
+    parameters: z.object({
+      prompt: z.string().describe("The prompt to generate a music from"),
+      negativePrompt: z
+        .string()
+        .describe("The negative prompt to generate a music from")
+        .optional()
+        .default("chaos, bad music"),
+      video: z.string().url().describe("The video to generate a music from"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create video generation task
+      if (!args.prompt || !args.video) {
+        throw new UserError("Prompt and video are required");
+      }
+      const config = MMAUDIO_MODEL_CONFIG["mmaudio"];
+
+      const requestBody = JSON.stringify({
+        model: "Qubico/mmaudio",
+        task_type: "video2audio",
+        input: {
+          prompt: args.prompt,
+          negative_prompt: args.negativePrompt,
+          video: args.video,
+        },
+      });
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const url = parseAudioOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Music generated successfully!\nUsage: ${usage} tokens\nMusic url:\n${url}`,
+          },
+        ],
+      };
+    },
+  });
+}
+
+const TRELLIS_MODEL_CONFIG: Record<string, BaseConfig> = {
+  trellis: { maxAttempts: 30, timeout: 600 },
+};
+
+function registerTrellisTool(server: FastMCP) {
+  server.addTool({
+    name: "generate_3d_model",
+    description: "Generate a 3d model using PiAPI Trellis",
+    parameters: z.object({
+      image: z.string().url().describe("The image to generate a 3d model from"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create 3d model generation task
+      if (!args.image) {
+        throw new UserError("Image is required");
+      }
+      const config = TRELLIS_MODEL_CONFIG["trellis"];
+
+      const requestBody = JSON.stringify({
+        model: "Qubico/trellis",
+        task_type: "image-to-3d",
+        input: {
+          image: args.image,
+        },
+      });
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const [imageUrl, videoUrl, modelFileUrl] = parseTrellisOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `3d model generated successfully!\nUsage: ${usage} tokens\nImage url:\n${imageUrl}\nVideo url:\n${videoUrl}\nModel file url:\n${modelFileUrl}`,
+          },
+        ],
+      };
+    },
+  });
+}
+
 // Task handler
 async function handleTask(
   log: any,
@@ -1176,21 +1280,46 @@ function parseImageOutput(output: unknown): string[] {
   }
 
   const imageOutput = result.data;
-  const image_urls = [
+  const imageUrls = [
     ...(imageOutput.image_url ? [imageOutput.image_url] : []),
     ...(imageOutput.image_urls || []),
   ].filter(Boolean);
 
-  if (image_urls.length === 0) {
+  if (imageUrls.length === 0) {
     throw new UserError("Task completed but no image URLs found");
   }
 
-  return image_urls;
+  return imageUrls;
+}
+
+const AudioOutputSchema = z
+  .object({
+    audio_url: z.string(),
+  })
+  .refine((data) => data.audio_url, {
+    message: "At least one audio URL must be provided",
+    path: ["audio_url"],
+  });
+
+function parseAudioOutput(output: unknown): string {
+  const result = AudioOutputSchema.safeParse(output);
+
+  if (!result.success) {
+    throw new UserError(`Invalid audio output format: ${result.error.message}`);
+  }
+
+  const audioUrl = result.data.audio_url;
+
+  if (!audioUrl) {
+    throw new UserError("Task completed but no audio URL found");
+  }
+
+  return audioUrl;
 }
 
 const VideoOutputSchema = z
   .object({
-    video_url: z.string().optional(),
+    video_url: z.string(),
   })
   .refine((data) => data.video_url, {
     message: "At least one video URL must be provided",
@@ -1204,11 +1333,44 @@ function parseVideoOutput(output: unknown): string {
     throw new UserError(`Invalid video output format: ${result.error.message}`);
   }
 
-  const video_url = result.data.video_url;
+  const videoUrl = result.data.video_url;
 
-  if (!video_url) {
+  if (!videoUrl) {
     throw new UserError("Task completed but no video URL found");
   }
 
-  return video_url;
+  return videoUrl;
+}
+
+const TrellisOutputSchema = z
+  .object({
+    no_background_image: z.string(),
+    combined_video: z.string(),
+    model_file: z.string(),
+  })
+  .refine(
+    (data) =>
+      data.no_background_image && data.combined_video && data.model_file,
+    {
+      message: "At least one image/video/model file URL must be provided",
+      path: ["no_background_image", "combined_video", "model_file"],
+    }
+  );
+
+function parseTrellisOutput(output: unknown): [string, string, string] {
+  const result = TrellisOutputSchema.safeParse(output);
+
+  if (!result.success) {
+    throw new UserError(`Invalid video output format: ${result.error.message}`);
+  }
+
+  const imageUrl = result.data.no_background_image;
+  const videoUrl = result.data.combined_video;
+  const modelFileUrl = result.data.model_file;
+
+  if (!imageUrl || !videoUrl || !modelFileUrl) {
+    throw new UserError("Task completed but no image/video/model file URL found");
+  }
+
+  return [imageUrl, videoUrl, modelFileUrl];
 }

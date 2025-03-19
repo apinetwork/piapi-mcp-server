@@ -20,11 +20,12 @@ Note: Time-consuming tools like video generation may not complete due to Claude'
 - [x] Skyreels Video generation from image prompt
 - [x] Wan Video generation from text descriptions
 - [x] Wan Video generation from image prompt
+- [x] MMAudio Music generation from video
 - [ ] Midjourney Image generation
 - [ ] Kling video generation
 - [ ] Luma Dream Machine video generation
 - [ ] Suno/Udio ai song generation
-- [ ] Trellis 3D model generation
+- [x] Trellis 3D model generation from image
 - [ ] Workflow planning inside LLMs
 
 ## Working with Claude Desktop
