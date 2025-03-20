@@ -1,4 +1,5 @@
 # piapi-mcp-server
+
 [![Website](https://img.shields.io/badge/Website-piapi.ai-blue?style=flat-square&logo=internet-explorer)](https://piapi.ai)
 [![Documentation](https://img.shields.io/badge/Documentation-docs-green?style=flat-square&logo=bookstack)](https://piapi.ai/docs)
 [![Discord](https://img.shields.io/badge/Discord-Join%20chat-7289da?style=flat-square&logo=discord)](https://discord.gg/qRRvcGa7Wb)
@@ -13,25 +14,25 @@ Note: Time-consuming tools like video generation may not complete due to Claude'
 
 - [x] Base Image toolkit
 - [x] Base Video toolkit
-- [x] Flux Image generation from text descriptions
-- [x] Flux Image generation with image prompt
-- [x] Hunyuan Video generation from text descriptions
-- [x] Hunyuan Video generation from image prompt
+- [x] Flux Image generation from text/image prompt
+- [x] Hunyuan Video generation from text/image prompt
 - [x] Skyreels Video generation from image prompt
-- [x] Wan Video generation from text descriptions
-- [x] Wan Video generation from image prompt
+- [x] Wan Video generation from text/image prompt
 - [x] MMAudio Music generation from video
 - [x] TTS Zero-Shot voice generation
 - [ ] Midjourney Image generation
-- [ ] Kling video generation
-- [ ] Luma Dream Machine video generation
-- [ ] Suno/Udio ai song generation
+  - [x] imagine
+  - [ ] other
+- [ ] Kling Video generation
+- [x] Luma Dream Machine video generation
+- [ ] Suno Song and Lyrics generation
+- [ ] Udio Song and Lyrics generation
 - [x] Trellis 3D model generation from image
 - [ ] Workflow planning inside LLMs
 
-## Working with Claude Desktop
-![image](./assets/Claude-desktop.png)
+## Working with Claude Desktop Example
 
+![image](./assets/Claude-desktop.png)
 
 ## Prerequisites
 
@@ -42,27 +43,36 @@ Note: Time-consuming tools like video generation may not complete due to Claude'
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/apinetwork/piapi-mcp-server
 cd piapi-mcp-server
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
-3. Create a `.env` file in the project root:
-```bash
-PIAPI_API_KEY=your_api_key_here
-```
+3. Build the project:
 
-4. Build the project:
 ```bash
 npm run build
 ```
 
-5. Test server with MCP Inspector:
+After building, a `dist/index.js` file will be generated. You can then configure this file with Claude Desktop and other applications. For detailed configuration instructions, please refer to the Usage section.
+
+4. (Optional) Test server with MCP Inspector:
+
+First, create a `.env` file in the project root directory with your API key:
+
+```bash
+PIAPI_API_KEY=your_api_key_here
+```
+
+Then run the following command to start the MCP Inspector:
+
 ```bash
 npm run inspect
 ```
@@ -79,7 +89,6 @@ The MCP Inspector is a powerful development tool that helps you test and debug y
 - **History Tracking**: Keep track of your previous function calls and their results
 
 For detailed information about using the MCP Inspector and its features, visit the [official MCP documentation](https://modelcontextprotocol.io/docs/tools/inspector).
-
 
 ## Usage
 
@@ -144,19 +153,19 @@ To disable the piapi server:
 2. Find the "piapi" entry in the server list
 3. Click the "Enabled" toggle button to switch it to "Disabled"
 
-
 ## Development
 
 ### Project Structure
+
 ```
 piapi-mcp-server/
+├── assets/
 ├── src/
 │   ├── index.ts        # Main server entry point
 ├── package.json
 ├── tsconfig.json
-└── .env
+└── .env.example
 ```
-
 
 ## License
 
