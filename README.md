@@ -23,7 +23,7 @@ Note: Time-consuming tools like video generation may not complete due to Claude'
 - [ ] Midjourney Image generation
   - [x] imagine
   - [ ] other
-- [ ] Kling Video generation
+- [x] Kling Video and Effects generation
 - [x] Luma Dream Machine video generation
 - [x] Suno Music generation
 - [ ] Suno Lyrics generation

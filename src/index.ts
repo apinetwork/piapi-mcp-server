@@ -47,6 +47,7 @@ function registerTools(server: FastMCP) {
   registerMMAudioTool(server);
   registerTTSTool(server);
   registerMidjourneyTool(server);
+  registerKlingTool(server);
   registerLumaTool(server);
   registerSunoTool(server);
   registerTrellisTool(server);
@@ -1233,6 +1234,133 @@ function registerMidjourneyTool(server: FastMCP) {
   });
 }
 
+const KLING_MODEL_CONFIG: Record<string, BaseConfig> = {
+  video: { maxAttempts: 30, timeout: 900 },
+  effect: { maxAttempts: 30, timeout: 900 },
+};
+
+function registerKlingTool(server: FastMCP) {
+  server.addTool({
+    name: "generate_video_kling",
+    description: "Generate a video using Kling",
+    parameters: z.object({
+      prompt: z.string().describe("The prompt to generate a video from"),
+      negativePrompt: z
+        .string()
+        .describe("The negative prompt to generate a video from")
+        .optional()
+        .default("chaos, bad video, low quality, low resolution"),
+      referenceImage: z
+        .string()
+        .url()
+        .optional()
+        .describe("The reference image to generate a video with"),
+      aspectRatio: z
+        .enum(["16:9", "1:1", "9:16"])
+        .optional()
+        .default("16:9")
+        .describe(
+          "The aspect ratio of the video to generate, must be either '16:9', '1:1', or '9:16', defaults to '16:9'"
+        ),
+      duration: z
+        .enum(["5s", "10s"])
+        .optional()
+        .default("5s")
+        .describe(
+          "The duration of the video to generate, defaults to 5 seconds"
+        ),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create video generation task
+      if (!args.prompt) {
+        throw new UserError("Prompt is required");
+      }
+      const config = KLING_MODEL_CONFIG["video"];
+
+      const requestBody = JSON.stringify({
+        model: "kling",
+        task_type: "video_generation",
+        input: {
+          prompt: args.prompt,
+          negative_prompt: args.negativePrompt,
+          aspect_ratio: args.aspectRatio,
+          image_url: args.referenceImage,
+          duration: args.duration === "5s" ? 5 : 10,
+        },
+      });
+      const { taskId, usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const urls = parseKlingOutput(taskId, output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `TaskId: ${taskId}\nVideo generated successfully!\nUsage: ${usage} tokens\nVideo urls:\n${urls.join(
+              "\n"
+            )}`,
+          },
+        ],
+      };
+    },
+  });
+  server.addTool({
+    name: "generate_video_effect_kling",
+    description: "Generate a video effect using Kling",
+    parameters: z.object({
+      image: z
+        .string()
+        .url()
+        .describe("The reference image to generate a video effect from"),
+      effectName: z
+        .enum(["squish", "expansion"])
+        .optional()
+        .default("squish")
+        .describe(
+          "The effect name to generate, must be either 'squish' or 'expansion', defaults to 'squish'"
+        ),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create video generation task
+      if (!args.image) {
+        throw new UserError("Image is required");
+      }
+      const config = KLING_MODEL_CONFIG["effect"];
+
+      const requestBody = JSON.stringify({
+        model: "kling",
+        task_type: "effects",
+        input: {
+          image_url: args.image,
+          effect: args.effectName,
+        },
+      });
+      const { taskId, usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const urls = parseKlingOutput(taskId, output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `TaskId: ${taskId}\nVideo effect generated successfully!\nUsage: ${usage} tokens\nVideo urls:\n${urls.join(
+              "\n"
+            )}`,
+          },
+        ],
+      };
+    },
+  });
+}
+
 const SUNO_MODEL_CONFIG: Record<string, BaseConfig> = {
   music: { maxAttempts: 30, timeout: 900 },
 };
@@ -1281,7 +1409,9 @@ function registerSunoTool(server: FastMCP) {
       let requestBody = "";
       if (args.title || args.tags || args.negativeTags) {
         if (args.makeInstrumental) {
-          throw new UserError("makeInstrumental is not compatible with title, tags, negativeTags, please remove them if you want to make the music instrumental");
+          throw new UserError(
+            "makeInstrumental is not compatible with title, tags, negativeTags, please remove them if you want to make the music instrumental"
+          );
         }
         requestBody = JSON.stringify({
           model: "music-s",
@@ -1431,7 +1561,10 @@ function registerTrellisTool(server: FastMCP) {
         config
       );
 
-      const [imageUrl, videoUrl, modelFileUrl] = parseTrellisOutput(taskId, output);
+      const [imageUrl, videoUrl, modelFileUrl] = parseTrellisOutput(
+        taskId,
+        output
+      );
       return {
         content: [
           {
@@ -1564,7 +1697,9 @@ function parseImageOutput(taskId: string, output: unknown): string[] {
   const result = ImageOutputSchema.safeParse(output);
 
   if (!result.success) {
-    throw new UserError(`TaskId: ${taskId}, Invalid image output format: ${result.error.message}`);
+    throw new UserError(
+      `TaskId: ${taskId}, Invalid image output format: ${result.error.message}`
+    );
   }
 
   const imageOutput = result.data;
@@ -1574,7 +1709,9 @@ function parseImageOutput(taskId: string, output: unknown): string[] {
   ].filter(Boolean);
 
   if (imageUrls.length === 0) {
-    throw new UserError(`TaskId: ${taskId}, Task completed but no image URLs found`);
+    throw new UserError(
+      `TaskId: ${taskId}, Task completed but no image URLs found`
+    );
   }
 
   return imageUrls;
@@ -1593,13 +1730,17 @@ function parseAudioOutput(taskId: string, output: unknown): string {
   const result = AudioOutputSchema.safeParse(output);
 
   if (!result.success) {
-    throw new UserError(`TaskId: ${taskId}, Invalid audio output format: ${result.error.message}`);
+    throw new UserError(
+      `TaskId: ${taskId}, Invalid audio output format: ${result.error.message}`
+    );
   }
 
   const audioUrl = result.data.audio_url;
 
   if (!audioUrl) {
-    throw new UserError(`TaskId: ${taskId}, Task completed but no audio URL found`);
+    throw new UserError(
+      `TaskId: ${taskId}, Task completed but no audio URL found`
+    );
   }
 
   return audioUrl;
@@ -1618,16 +1759,56 @@ function parseVideoOutput(taskId: string, output: unknown): string {
   const result = VideoOutputSchema.safeParse(output);
 
   if (!result.success) {
-    throw new UserError(`TaskId: ${taskId}, Invalid video output format: ${result.error.message}`);
+    throw new UserError(
+      `TaskId: ${taskId}, Invalid video output format: ${result.error.message}`
+    );
   }
 
   const videoUrl = result.data.video_url;
 
   if (!videoUrl) {
-    throw new UserError(`TaskId: ${taskId}, Task completed but no video URL found`);
+    throw new UserError(
+      `TaskId: ${taskId}, Task completed but no video URL found`
+    );
   }
 
   return videoUrl;
+}
+
+const KlingOutputSchema = z.object({
+  video_url: z.string(),
+  works: z.array(z.object({
+    video: z.object({
+      resource_without_watermark: z.string(),
+      // height: z.number(),
+      // width: z.number(),
+      // duration: z.number(),
+    })
+  }))
+})
+
+function parseKlingOutput(taskId: string, output: unknown): string[] {
+  const result = KlingOutputSchema.safeParse(output);
+
+  if (!result.success) {
+    throw new UserError(
+      `TaskId: ${taskId}, Invalid kling output format: ${result.error.message}`
+    );
+  }
+
+  let urls: string[] = [];
+  urls.push(result.data.video_url);
+  for (const work of result.data.works) {
+    urls.push(work.video.resource_without_watermark);
+  }
+
+  if (urls.length === 0) {
+    throw new UserError(
+      `TaskId: ${taskId}, Task completed but no video/work URLs found`
+    );
+  }
+
+  return urls;
 }
 
 interface LumaResult {
@@ -1654,11 +1835,16 @@ const LumaOutputSchema = z
     path: ["video_raw", "last_frame"],
   });
 
-function parseLumaOutput(taskId: string, output: unknown): [LumaResult, LumaResult] {
+function parseLumaOutput(
+  taskId: string,
+  output: unknown
+): [LumaResult, LumaResult] {
   const result = LumaOutputSchema.safeParse(output);
 
   if (!result.success) {
-    throw new UserError(`TaskId: ${taskId}, Invalid luma output format: ${result.error.message}`);
+    throw new UserError(
+      `TaskId: ${taskId}, Invalid luma output format: ${result.error.message}`
+    );
   }
 
   return [result.data.video_raw, result.data.last_frame];
@@ -1669,19 +1855,26 @@ interface SunoMusicClip {
   image_url: string;
 }
 
-const SunoMusicOutputSchema = z
-  .object({
-    clips: z.map(z.string(), z.object({
+const SunoMusicOutputSchema = z.object({
+  clips: z.map(
+    z.string(),
+    z.object({
       audio_url: z.string(),
       image_url: z.string(),
-    })),
-  });
+    })
+  ),
+});
 
-function parseSunoMusicOutput(taskId: string, output: unknown): SunoMusicClip[] {
+function parseSunoMusicOutput(
+  taskId: string,
+  output: unknown
+): SunoMusicClip[] {
   const result = SunoMusicOutputSchema.safeParse(output);
 
   if (!result.success) {
-    throw new UserError(`TaskId: ${taskId}, Invalid suno music output format: ${result.error.message}`);
+    throw new UserError(
+      `TaskId: ${taskId}, Invalid suno music output format: ${result.error.message}`
+    );
   }
 
   const results: SunoMusicClip[] = [];
@@ -1693,7 +1886,9 @@ function parseSunoMusicOutput(taskId: string, output: unknown): SunoMusicClip[] 
   }
 
   if (results.length === 0) {
-    throw new UserError(`TaskId: ${taskId}, Task completed but no audio/image URLs found`);
+    throw new UserError(
+      `TaskId: ${taskId}, Task completed but no audio/image URLs found`
+    );
   }
 
   return results;
@@ -1714,11 +1909,16 @@ const TrellisOutputSchema = z
     }
   );
 
-function parseTrellisOutput(taskId: string, output: unknown): [string, string, string] {
+function parseTrellisOutput(
+  taskId: string,
+  output: unknown
+): [string, string, string] {
   const result = TrellisOutputSchema.safeParse(output);
 
   if (!result.success) {
-    throw new UserError(`TaskId: ${taskId}, Invalid trellis output format: ${result.error.message}`);
+    throw new UserError(
+      `TaskId: ${taskId}, Invalid trellis output format: ${result.error.message}`
+    );
   }
 
   const imageUrl = result.data.no_background_image;
