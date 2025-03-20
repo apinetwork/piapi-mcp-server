@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-import { FastMCP, imageContent, Progress, UserError } from "fastmcp";
+import { FastMCP, imageContent, Progress, UserError, Content } from "fastmcp";
 import { z } from "zod";
 // Load environment variables
 config();
@@ -48,6 +48,7 @@ function registerTools(server: FastMCP) {
   registerTTSTool(server);
   registerMidjourneyTool(server);
   registerLumaTool(server);
+  registerSunoTool(server);
   registerTrellisTool(server);
 }
 
@@ -110,7 +111,7 @@ function registerImageTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(output);
+      const urls = parseImageOutput(taskId, output);
       return {
         content: [
           {
@@ -154,7 +155,7 @@ function registerImageTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(output);
+      const urls = parseImageOutput(taskId, output);
       return {
         content: [
           {
@@ -208,7 +209,7 @@ function registerImageTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(output);
+      const urls = parseImageOutput(taskId, output);
       return {
         content: [
           {
@@ -262,7 +263,7 @@ function registerImageTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(output);
+      const urls = parseImageOutput(taskId, output);
       return {
         content: [
           {
@@ -316,7 +317,7 @@ function registerVideoTool(server: FastMCP) {
         config
       );
 
-      const url = parseVideoOutput(output);
+      const url = parseVideoOutput(taskId, output);
       return {
         content: [
           {
@@ -355,7 +356,7 @@ function registerVideoTool(server: FastMCP) {
         config
       );
 
-      const url = parseVideoOutput(output);
+      const url = parseVideoOutput(taskId, output);
       return {
         content: [
           {
@@ -498,7 +499,7 @@ function registerFluxTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(output);
+      const urls = parseImageOutput(taskId, output);
       return {
         content: [
           {
@@ -617,7 +618,7 @@ function registerFluxTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(output);
+      const urls = parseImageOutput(taskId, output);
       return {
         content: [
           {
@@ -702,7 +703,7 @@ function registerFluxTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(output);
+      const urls = parseImageOutput(taskId, output);
       return {
         content: [
           {
@@ -809,7 +810,7 @@ function registerFluxTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(output);
+      const urls = parseImageOutput(taskId, output);
       return {
         content: [
           {
@@ -909,7 +910,7 @@ function registerHunyuanTool(server: FastMCP) {
         config
       );
 
-      const url = parseVideoOutput(output);
+      const url = parseVideoOutput(taskId, output);
       return {
         content: [
           {
@@ -975,7 +976,7 @@ function registerSkyreelsTool(server: FastMCP) {
         config
       );
 
-      const url = parseVideoOutput(output);
+      const url = parseVideoOutput(taskId, output);
       return {
         content: [
           {
@@ -1056,7 +1057,7 @@ function registerWanTool(server: FastMCP) {
         config
       );
 
-      const url = parseVideoOutput(output);
+      const url = parseVideoOutput(taskId, output);
       return {
         content: [
           {
@@ -1109,7 +1110,7 @@ function registerMMAudioTool(server: FastMCP) {
         config
       );
 
-      const url = parseAudioOutput(output);
+      const url = parseAudioOutput(taskId, output);
       return {
         content: [
           {
@@ -1166,7 +1167,7 @@ function registerTTSTool(server: FastMCP) {
         config
       );
 
-      const url = parseAudioOutput(output);
+      const url = parseAudioOutput(taskId, output);
       return {
         content: [
           {
@@ -1217,7 +1218,7 @@ function registerMidjourneyTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(output);
+      const urls = parseImageOutput(taskId, output);
       return {
         content: [
           {
@@ -1227,6 +1228,103 @@ function registerMidjourneyTool(server: FastMCP) {
             )}`,
           },
         ],
+      };
+    },
+  });
+}
+
+const SUNO_MODEL_CONFIG: Record<string, BaseConfig> = {
+  music: { maxAttempts: 30, timeout: 900 },
+};
+
+function registerSunoTool(server: FastMCP) {
+  server.addTool({
+    name: "generate_music_suno",
+    description: "Generate music using Suno",
+    parameters: z.object({
+      prompt: z
+        .string()
+        .max(3000)
+        .describe(
+          "The prompt to generate a music from, limited to 3000 characters"
+        ),
+      makeInstrumental: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          "Whether to make the music instrumental, defaults to false. Not compatible with title, tags, negativeTags"
+        ),
+      title: z
+        .string()
+        .max(80)
+        .optional()
+        .describe("The title of the music, limited to 80 characters"),
+      tags: z
+        .string()
+        .max(200)
+        .optional()
+        .describe("The tags of the music, limited to 200 characters"),
+      negativeTags: z
+        .string()
+        .max(200)
+        .optional()
+        .describe("The negative tags of the music, limited to 200 characters"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create video generation task
+      if (!args.prompt) {
+        throw new UserError("Prompt is required");
+      }
+      const config = SUNO_MODEL_CONFIG["music"];
+
+      let requestBody = "";
+      if (args.title || args.tags || args.negativeTags) {
+        if (args.makeInstrumental) {
+          throw new UserError("makeInstrumental is not compatible with title, tags, negativeTags, please remove them if you want to make the music instrumental");
+        }
+        requestBody = JSON.stringify({
+          model: "music-s",
+          task_type: "generate_music_custom",
+          input: {
+            prompt: args.prompt,
+            title: args.title,
+            tags: args.tags,
+            negative_tags: args.negativeTags,
+          },
+        });
+      } else {
+        requestBody = JSON.stringify({
+          model: "music-s",
+          task_type: "generate_music",
+          input: {
+            prompt: args.prompt,
+            make_instrumental: args.makeInstrumental,
+          },
+        });
+      }
+
+      const { taskId, usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const clips = parseSunoMusicOutput(taskId, output);
+      let content: Content[] = [];
+      content.push({
+        type: "text",
+        text: `TaskId: ${taskId}\nMusic generated successfully!\nUsage: ${usage} tokens`,
+      });
+      for (const clip of clips) {
+        content.push({
+          type: "text",
+          text: `Audio url: ${clip.audio_url}\nImage url: ${clip.image_url}`,
+        });
+      }
+      return {
+        content,
       };
     },
   });
@@ -1246,7 +1344,9 @@ function registerLumaTool(server: FastMCP) {
         .enum(["5s", "10s"])
         .optional()
         .default("5s")
-        .describe("The duration of the video, defaults to 5s. If keyFrame is provided, only 5s is supported"),
+        .describe(
+          "The duration of the video, defaults to 5s. If keyFrame is provided, only 5s is supported"
+        ),
       aspectRatio: z
         .string()
         .optional()
@@ -1286,7 +1386,7 @@ function registerLumaTool(server: FastMCP) {
         config
       );
 
-      const [video_raw, last_frame] = parseLumaOutput(output);
+      const [video_raw, last_frame] = parseLumaOutput(taskId, output);
       return {
         content: [
           {
@@ -1331,7 +1431,7 @@ function registerTrellisTool(server: FastMCP) {
         config
       );
 
-      const [imageUrl, videoUrl, modelFileUrl] = parseTrellisOutput(output);
+      const [imageUrl, videoUrl, modelFileUrl] = parseTrellisOutput(taskId, output);
       return {
         content: [
           {
@@ -1460,11 +1560,11 @@ const ImageOutputSchema = z
     }
   );
 
-function parseImageOutput(output: unknown): string[] {
+function parseImageOutput(taskId: string, output: unknown): string[] {
   const result = ImageOutputSchema.safeParse(output);
 
   if (!result.success) {
-    throw new UserError(`Invalid image output format: ${result.error.message}`);
+    throw new UserError(`TaskId: ${taskId}, Invalid image output format: ${result.error.message}`);
   }
 
   const imageOutput = result.data;
@@ -1474,7 +1574,7 @@ function parseImageOutput(output: unknown): string[] {
   ].filter(Boolean);
 
   if (imageUrls.length === 0) {
-    throw new UserError("Task completed but no image URLs found");
+    throw new UserError(`TaskId: ${taskId}, Task completed but no image URLs found`);
   }
 
   return imageUrls;
@@ -1489,17 +1589,17 @@ const AudioOutputSchema = z
     path: ["audio_url"],
   });
 
-function parseAudioOutput(output: unknown): string {
+function parseAudioOutput(taskId: string, output: unknown): string {
   const result = AudioOutputSchema.safeParse(output);
 
   if (!result.success) {
-    throw new UserError(`Invalid audio output format: ${result.error.message}`);
+    throw new UserError(`TaskId: ${taskId}, Invalid audio output format: ${result.error.message}`);
   }
 
   const audioUrl = result.data.audio_url;
 
   if (!audioUrl) {
-    throw new UserError("Task completed but no audio URL found");
+    throw new UserError(`TaskId: ${taskId}, Task completed but no audio URL found`);
   }
 
   return audioUrl;
@@ -1514,17 +1614,17 @@ const VideoOutputSchema = z
     path: ["video_url"],
   });
 
-function parseVideoOutput(output: unknown): string {
+function parseVideoOutput(taskId: string, output: unknown): string {
   const result = VideoOutputSchema.safeParse(output);
 
   if (!result.success) {
-    throw new UserError(`Invalid video output format: ${result.error.message}`);
+    throw new UserError(`TaskId: ${taskId}, Invalid video output format: ${result.error.message}`);
   }
 
   const videoUrl = result.data.video_url;
 
   if (!videoUrl) {
-    throw new UserError("Task completed but no video URL found");
+    throw new UserError(`TaskId: ${taskId}, Task completed but no video URL found`);
   }
 
   return videoUrl;
@@ -1554,14 +1654,49 @@ const LumaOutputSchema = z
     path: ["video_raw", "last_frame"],
   });
 
-function parseLumaOutput(output: unknown): [LumaResult, LumaResult] {
+function parseLumaOutput(taskId: string, output: unknown): [LumaResult, LumaResult] {
   const result = LumaOutputSchema.safeParse(output);
 
   if (!result.success) {
-    throw new UserError(`Invalid luma output format: ${result.error.message}`);
+    throw new UserError(`TaskId: ${taskId}, Invalid luma output format: ${result.error.message}`);
   }
 
   return [result.data.video_raw, result.data.last_frame];
+}
+
+interface SunoMusicClip {
+  audio_url: string;
+  image_url: string;
+}
+
+const SunoMusicOutputSchema = z
+  .object({
+    clips: z.map(z.string(), z.object({
+      audio_url: z.string(),
+      image_url: z.string(),
+    })),
+  });
+
+function parseSunoMusicOutput(taskId: string, output: unknown): SunoMusicClip[] {
+  const result = SunoMusicOutputSchema.safeParse(output);
+
+  if (!result.success) {
+    throw new UserError(`TaskId: ${taskId}, Invalid suno music output format: ${result.error.message}`);
+  }
+
+  const results: SunoMusicClip[] = [];
+  for (const [key, value] of Object.entries(result.data.clips)) {
+    results.push({
+      audio_url: value.audio_url,
+      image_url: value.image_url,
+    });
+  }
+
+  if (results.length === 0) {
+    throw new UserError(`TaskId: ${taskId}, Task completed but no audio/image URLs found`);
+  }
+
+  return results;
 }
 
 const TrellisOutputSchema = z
@@ -1579,11 +1714,11 @@ const TrellisOutputSchema = z
     }
   );
 
-function parseTrellisOutput(output: unknown): [string, string, string] {
+function parseTrellisOutput(taskId: string, output: unknown): [string, string, string] {
   const result = TrellisOutputSchema.safeParse(output);
 
   if (!result.success) {
-    throw new UserError(`Invalid video output format: ${result.error.message}`);
+    throw new UserError(`TaskId: ${taskId}, Invalid trellis output format: ${result.error.message}`);
   }
 
   const imageUrl = result.data.no_background_image;
@@ -1592,7 +1727,7 @@ function parseTrellisOutput(output: unknown): [string, string, string] {
 
   if (!imageUrl || !videoUrl || !modelFileUrl) {
     throw new UserError(
-      "Task completed but no image/video/model file URL found"
+      `TaskId: ${taskId}, Task completed but no image/video/model file URL found`
     );
   }
 

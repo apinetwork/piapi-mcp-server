@@ -25,8 +25,9 @@ Note: Time-consuming tools like video generation may not complete due to Claude'
   - [ ] other
 - [ ] Kling Video generation
 - [x] Luma Dream Machine video generation
-- [ ] Suno Song and Lyrics generation
-- [ ] Udio Song and Lyrics generation
+- [x] Suno Music generation
+- [ ] Suno Lyrics generation
+- [ ] Udio Music and Lyrics generation
 - [x] Trellis 3D model generation from image
 - [ ] Workflow planning inside LLMs
 
