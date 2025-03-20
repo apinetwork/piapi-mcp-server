@@ -45,6 +45,7 @@ function registerTools(server: FastMCP) {
   registerSkyreelsTool(server);
   registerWanTool(server);
   registerMMAudioTool(server);
+  registerTTSTool(server);
   registerTrellisTool(server);
 }
 
@@ -1119,6 +1120,63 @@ function registerMMAudioTool(server: FastMCP) {
   });
 }
 
+const TTS_MODEL_CONFIG: Record<string, BaseConfig> = {
+  zeroShot: { maxAttempts: 30, timeout: 600 },
+};
+
+function registerTTSTool(server: FastMCP) {
+  server.addTool({
+    name: "generate_zero_shot_tts",
+    description: "Zero-shot TTS using PiAPI f5-tts",
+    parameters: z.object({
+      genText: z.string().describe("The text to generate a speech from"),
+      refText: z
+        .string()
+        .optional()
+        .describe(
+          "The reference text to generate a speech from, auto detect from refAudio if not provided"
+        ),
+      refAudio: z
+        .string()
+        .url()
+        .describe("The reference audio to generate a speech from"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create video generation task
+      if (!args.genText || !args.refAudio) {
+        throw new UserError("genText and refAudio are required");
+      }
+      const config = TTS_MODEL_CONFIG["zeroShot"];
+
+      const requestBody = JSON.stringify({
+        model: "Qubico/tts",
+        task_type: "zero-shot",
+        input: {
+          gen_text: args.genText,
+          ref_text: args.refText,
+          ref_audio: args.refAudio,
+        },
+      });
+      const { usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const url = parseAudioOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Speech generated successfully!\nUsage: ${usage} tokens\nSpeech url:\n${url}`,
+          },
+        ],
+      };
+    },
+  });
+}
+
 const TRELLIS_MODEL_CONFIG: Record<string, BaseConfig> = {
   trellis: { maxAttempts: 30, timeout: 600 },
 };
@@ -1369,7 +1427,9 @@ function parseTrellisOutput(output: unknown): [string, string, string] {
   const modelFileUrl = result.data.model_file;
 
   if (!imageUrl || !videoUrl || !modelFileUrl) {
-    throw new UserError("Task completed but no image/video/model file URL found");
+    throw new UserError(
+      "Task completed but no image/video/model file URL found"
+    );
   }
 
   return [imageUrl, videoUrl, modelFileUrl];

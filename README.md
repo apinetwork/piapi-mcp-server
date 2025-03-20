@@ -21,6 +21,7 @@ Note: Time-consuming tools like video generation may not complete due to Claude'
 - [x] Wan Video generation from text descriptions
 - [x] Wan Video generation from image prompt
 - [x] MMAudio Music generation from video
+- [x] TTS Zero-Shot voice generation
 - [ ] Midjourney Image generation
 - [ ] Kling video generation
 - [ ] Luma Dream Machine video generation
