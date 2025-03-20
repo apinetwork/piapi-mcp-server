@@ -46,6 +46,8 @@ function registerTools(server: FastMCP) {
   registerWanTool(server);
   registerMMAudioTool(server);
   registerTTSTool(server);
+  registerMidjourneyTool(server);
+  registerLumaTool(server);
   registerTrellisTool(server);
 }
 
@@ -92,7 +94,7 @@ function registerImageTool(server: FastMCP) {
       }
       const config = IMAGE_TOOL_CONFIG["faceswap"];
 
-      let requestBody = JSON.stringify({
+      const requestBody = JSON.stringify({
         model: "Qubico/image-toolkit",
         task_type: "face-swap",
         input: {
@@ -101,7 +103,7 @@ function registerImageTool(server: FastMCP) {
         },
       });
 
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -113,7 +115,7 @@ function registerImageTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+            text: `TaskId: ${taskId}\nImage generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
               "\n"
             )}`,
           },
@@ -137,7 +139,7 @@ function registerImageTool(server: FastMCP) {
       }
       const config = IMAGE_TOOL_CONFIG["rmbg"];
 
-      let requestBody = JSON.stringify({
+      const requestBody = JSON.stringify({
         model: "Qubico/image-toolkit",
         task_type: "background-remove",
         input: {
@@ -145,7 +147,7 @@ function registerImageTool(server: FastMCP) {
         },
       });
 
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -157,7 +159,7 @@ function registerImageTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+            text: `TaskId: ${taskId}\nImage generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
               "\n"
             )}`,
           },
@@ -188,7 +190,7 @@ function registerImageTool(server: FastMCP) {
       }
       const config = IMAGE_TOOL_CONFIG["segment"];
 
-      let requestBody = JSON.stringify({
+      const requestBody = JSON.stringify({
         model: "Qubico/image-toolkit",
         task_type: "segment",
         input: {
@@ -199,7 +201,7 @@ function registerImageTool(server: FastMCP) {
         },
       });
 
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -211,7 +213,7 @@ function registerImageTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+            text: `TaskId: ${taskId}\nImage generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
               "\n"
             )}`,
           },
@@ -243,7 +245,7 @@ function registerImageTool(server: FastMCP) {
       }
       const config = IMAGE_TOOL_CONFIG["upscale"];
 
-      let requestBody = JSON.stringify({
+      const requestBody = JSON.stringify({
         model: "Qubico/image-toolkit",
         task_type: "upscale",
         input: {
@@ -253,7 +255,7 @@ function registerImageTool(server: FastMCP) {
         },
       });
 
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -265,7 +267,7 @@ function registerImageTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+            text: `TaskId: ${taskId}\nImage generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
               "\n"
             )}`,
           },
@@ -298,7 +300,7 @@ function registerVideoTool(server: FastMCP) {
       }
       const config = VIDEO_TOOL_CONFIG["faceswap"];
 
-      let requestBody = JSON.stringify({
+      const requestBody = JSON.stringify({
         model: "Qubico/video-toolkit",
         task_type: "face-swap",
         input: {
@@ -307,7 +309,7 @@ function registerVideoTool(server: FastMCP) {
         },
       });
 
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -319,7 +321,7 @@ function registerVideoTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Video generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
+            text: `TaskId: ${taskId}\nVideo generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
           },
         ],
       };
@@ -338,7 +340,7 @@ function registerVideoTool(server: FastMCP) {
       }
       const config = VIDEO_TOOL_CONFIG["upscale"];
 
-      let requestBody = JSON.stringify({
+      const requestBody = JSON.stringify({
         model: "Qubico/video-toolkit",
         task_type: "upscale",
         input: {
@@ -346,7 +348,7 @@ function registerVideoTool(server: FastMCP) {
         },
       });
 
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -358,7 +360,7 @@ function registerVideoTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Video generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
+            text: `TaskId: ${taskId}\nVideo generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
           },
         ],
       };
@@ -383,7 +385,7 @@ const FLUX_MODEL_CONFIG: Record<string, FluxConfig> = {
 function registerFluxTool(server: FastMCP) {
   server.addTool({
     name: "generate_image",
-    description: "Generate a image using PiAPI Flux",
+    description: "Generate a image using Qubico Flux",
     parameters: z.object({
       prompt: z.string().describe("The prompt to generate an image from"),
       negativePrompt: z
@@ -489,7 +491,7 @@ function registerFluxTool(server: FastMCP) {
         });
       }
 
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -501,7 +503,7 @@ function registerFluxTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+            text: `TaskId: ${taskId}\nImage generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
               "\n"
             )}`,
           },
@@ -511,7 +513,7 @@ function registerFluxTool(server: FastMCP) {
   });
   server.addTool({
     name: "modify_image",
-    description: "Modify a image using PiAPI Flux, inpaint or outpaint",
+    description: "Modify a image using Qubico Flux, inpaint or outpaint",
     parameters: z.object({
       prompt: z.string().describe("The prompt to modify an image from"),
       negativePrompt: z
@@ -608,7 +610,7 @@ function registerFluxTool(server: FastMCP) {
         });
       }
 
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -620,7 +622,7 @@ function registerFluxTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+            text: `TaskId: ${taskId}\nImage generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
               "\n"
             )}`,
           },
@@ -630,7 +632,7 @@ function registerFluxTool(server: FastMCP) {
   });
   server.addTool({
     name: "derive_image",
-    description: "Derive a image using PiAPI Flux, variation",
+    description: "Derive a image using Qubico Flux, variation",
     parameters: z.object({
       prompt: z.string().describe("The prompt to derive an image from"),
       negativePrompt: z
@@ -680,7 +682,7 @@ function registerFluxTool(server: FastMCP) {
       let steps = args.steps || config.defaultSteps;
       steps = Math.min(steps, config.maxSteps);
 
-      let requestBody = JSON.stringify({
+      const requestBody = JSON.stringify({
         model: "Qubico/flux1-dev-advanced",
         task_type: "redux-variation",
         input: {
@@ -693,7 +695,7 @@ function registerFluxTool(server: FastMCP) {
         },
       });
 
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -705,7 +707,7 @@ function registerFluxTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+            text: `TaskId: ${taskId}\nImage generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
               "\n"
             )}`,
           },
@@ -715,7 +717,7 @@ function registerFluxTool(server: FastMCP) {
   });
   server.addTool({
     name: "generate_image_controlnet",
-    description: "Generate a image using PiAPI Flux with ControlNet",
+    description: "Generate a image using Qubico Flux with ControlNet",
     parameters: z.object({
       prompt: z.string().describe("The prompt to generate an image from"),
       negativePrompt: z
@@ -781,7 +783,7 @@ function registerFluxTool(server: FastMCP) {
       let steps = args.steps || config.defaultSteps;
       steps = Math.min(steps, config.maxSteps);
 
-      let requestBody = JSON.stringify({
+      const requestBody = JSON.stringify({
         model: "Qubico/flux1-dev-advanced",
         task_type: "controlnet-lora",
         input: {
@@ -800,7 +802,7 @@ function registerFluxTool(server: FastMCP) {
         },
       });
 
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -812,7 +814,7 @@ function registerFluxTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Image generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+            text: `TaskId: ${taskId}\nImage generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
               "\n"
             )}`,
           },
@@ -844,7 +846,7 @@ const HUNYUAN_MODEL_CONFIG: Record<string, HunyuanConfig> = {
 function registerHunyuanTool(server: FastMCP) {
   server.addTool({
     name: "generate_video_hunyuan",
-    description: "Generate a video using PiAPI Hunyuan",
+    description: "Generate a video using Qubico Hunyuan",
     parameters: z.object({
       prompt: z.string().describe("The prompt to generate a video from"),
       negativePrompt: z
@@ -900,7 +902,7 @@ function registerHunyuanTool(server: FastMCP) {
           aspect_ratio: args.aspectRatio,
         },
       });
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -912,7 +914,7 @@ function registerHunyuanTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Video generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
+            text: `TaskId: ${taskId}\nVideo generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
           },
         ],
       };
@@ -927,7 +929,7 @@ const SKYREELS_MODEL_CONFIG: Record<string, BaseConfig> = {
 function registerSkyreelsTool(server: FastMCP) {
   server.addTool({
     name: "generate_video_skyreels",
-    description: "Generate a video using PiAPI Skyreels",
+    description: "Generate a video using Qubico Skyreels",
     parameters: z.object({
       prompt: z.string().describe("The prompt to generate a video from"),
       negativePrompt: z
@@ -966,7 +968,7 @@ function registerSkyreelsTool(server: FastMCP) {
           image: args.referenceImage,
         },
       });
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -978,7 +980,7 @@ function registerSkyreelsTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Video generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
+            text: `TaskId: ${taskId}\nVideo generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
           },
         ],
       };
@@ -994,7 +996,7 @@ const WAN_MODEL_CONFIG: Record<string, BaseConfig> = {
 function registerWanTool(server: FastMCP) {
   server.addTool({
     name: "generate_video_wan",
-    description: "Generate a video using PiAPI Wan",
+    description: "Generate a video using Qubico Wan",
     parameters: z.object({
       prompt: z.string().describe("The prompt to generate a video from"),
       negativePrompt: z
@@ -1047,7 +1049,7 @@ function registerWanTool(server: FastMCP) {
           image: args.referenceImage,
         },
       });
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -1059,7 +1061,7 @@ function registerWanTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Video generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
+            text: `TaskId: ${taskId}\nVideo generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
           },
         ],
       };
@@ -1074,7 +1076,7 @@ const MMAUDIO_MODEL_CONFIG: Record<string, BaseConfig> = {
 function registerMMAudioTool(server: FastMCP) {
   server.addTool({
     name: "generate_music_for_video",
-    description: "Generate a music for a video using PiAPI MMAudio",
+    description: "Generate a music for a video using Qubico MMAudio",
     parameters: z.object({
       prompt: z.string().describe("The prompt to generate a music from"),
       negativePrompt: z
@@ -1100,7 +1102,7 @@ function registerMMAudioTool(server: FastMCP) {
           video: args.video,
         },
       });
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -1112,7 +1114,7 @@ function registerMMAudioTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Music generated successfully!\nUsage: ${usage} tokens\nMusic url:\n${url}`,
+            text: `TaskId: ${taskId}\nMusic generated successfully!\nUsage: ${usage} tokens\nMusic url:\n${url}`,
           },
         ],
       };
@@ -1126,8 +1128,8 @@ const TTS_MODEL_CONFIG: Record<string, BaseConfig> = {
 
 function registerTTSTool(server: FastMCP) {
   server.addTool({
-    name: "generate_zero_shot_tts",
-    description: "Zero-shot TTS using PiAPI f5-tts",
+    name: "tts_zero_shot",
+    description: "Zero-shot TTS using Qubico f5-tts",
     parameters: z.object({
       genText: z.string().describe("The text to generate a speech from"),
       refText: z
@@ -1157,7 +1159,7 @@ function registerTTSTool(server: FastMCP) {
           ref_audio: args.refAudio,
         },
       });
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -1169,7 +1171,127 @@ function registerTTSTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `Speech generated successfully!\nUsage: ${usage} tokens\nSpeech url:\n${url}`,
+            text: `TaskId: ${taskId}\nSpeech generated successfully!\nUsage: ${usage} tokens\nSpeech url:\n${url}`,
+          },
+        ],
+      };
+    },
+  });
+}
+
+const MIDJOURNEY_MODEL_CONFIG: Record<string, BaseConfig> = {
+  imagine: { maxAttempts: 30, timeout: 900 },
+};
+
+function registerMidjourneyTool(server: FastMCP) {
+  server.addTool({
+    name: "midjourney_imagine",
+    description: "Generate a image using Midjourney Imagine",
+    parameters: z.object({
+      prompt: z.string().describe("The prompt to generate a image from"),
+      aspectRatio: z
+        .string()
+        .optional()
+        .describe("The aspect ratio of the image"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create video generation task
+      if (!args.prompt) {
+        throw new UserError("Prompt is required");
+      }
+      const config = MIDJOURNEY_MODEL_CONFIG["imagine"];
+
+      const requestBody = JSON.stringify({
+        model: "midjourney",
+        task_type: "imagine",
+        input: {
+          prompt: args.prompt,
+          aspect_ratio: args.aspectRatio,
+          process_mode: "fast",
+        },
+      });
+      const { taskId, usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const urls = parseImageOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `TaskId: ${taskId}\nImage generated successfully!\nUsage: ${usage} tokens\nImage urls:\n${urls.join(
+              "\n"
+            )}`,
+          },
+        ],
+      };
+    },
+  });
+}
+
+const LUMA_MODEL_CONFIG: Record<string, BaseConfig> = {
+  luma: { maxAttempts: 30, timeout: 900 },
+};
+
+function registerLumaTool(server: FastMCP) {
+  server.addTool({
+    name: "generate_video_luma",
+    description: "Generate a video using Luma",
+    parameters: z.object({
+      prompt: z.string().describe("The prompt to generate a video from"),
+      duration: z
+        .enum(["5s", "10s"])
+        .optional()
+        .default("5s")
+        .describe("The duration of the video, defaults to 5s. If keyFrame is provided, only 5s is supported"),
+      aspectRatio: z
+        .string()
+        .optional()
+        .describe("The aspect ratio of the video, defaults to 16:9"),
+      keyFrame: z
+        .string()
+        .url()
+        .optional()
+        .describe("The key frame to generate a video with"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      // Create video generation task
+      if (!args.prompt) {
+        throw new UserError("Prompt is required");
+      }
+      const config = LUMA_MODEL_CONFIG["luma"];
+
+      const requestBody = JSON.stringify({
+        model: "luma",
+        task_type: "video_generation",
+        input: {
+          prompt: args.prompt,
+          duration: args.duration === "5s" ? 5 : 10,
+          aspect_ratio: args.aspectRatio,
+          key_frames: {
+            frame0: {
+              type: args.keyFrame ? "image" : "",
+              url: args.keyFrame,
+            },
+          },
+        },
+      });
+      const { taskId, usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const [video_raw, last_frame] = parseLumaOutput(output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `TaskId: ${taskId}\nVideo generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${video_raw.url}\nVideo resolution: ${video_raw.width}x${video_raw.height}\nLast frame url:\n${last_frame.url}\nLast frame resolution: ${last_frame.width}x${last_frame.height}`,
           },
         ],
       };
@@ -1184,7 +1306,7 @@ const TRELLIS_MODEL_CONFIG: Record<string, BaseConfig> = {
 function registerTrellisTool(server: FastMCP) {
   server.addTool({
     name: "generate_3d_model",
-    description: "Generate a 3d model using PiAPI Trellis",
+    description: "Generate a 3d model using Qubico Trellis",
     parameters: z.object({
       image: z.string().url().describe("The image to generate a 3d model from"),
     }),
@@ -1202,7 +1324,7 @@ function registerTrellisTool(server: FastMCP) {
           image: args.image,
         },
       });
-      const { usage, output } = await handleTask(
+      const { taskId, usage, output } = await handleTask(
         log,
         reportProgress,
         requestBody,
@@ -1214,7 +1336,7 @@ function registerTrellisTool(server: FastMCP) {
         content: [
           {
             type: "text",
-            text: `3d model generated successfully!\nUsage: ${usage} tokens\nImage url:\n${imageUrl}\nVideo url:\n${videoUrl}\nModel file url:\n${modelFileUrl}`,
+            text: `TaskId: ${taskId}\n3d model generated successfully!\nUsage: ${usage} tokens\nImage url:\n${imageUrl}\nVideo url:\n${videoUrl}\nModel file url:\n${modelFileUrl}`,
           },
         ],
       };
@@ -1228,7 +1350,7 @@ async function handleTask(
   reportProgress: (progress: Progress) => Promise<void>,
   requestBody: string,
   config: BaseConfig
-) {
+): Promise<{ taskId: string; usage: string; output: unknown }> {
   const taskId = await createTask(requestBody);
   log.info(`Task created with ID: ${taskId}`);
   return await getTaskResult(
@@ -1266,7 +1388,7 @@ async function getTaskResult(
   taskId: string,
   maxAttempts: number,
   timeout: number
-) {
+): Promise<{ taskId: string; usage: string; output: unknown }> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     log.info(`Checking task status (attempt ${attempt + 1})...`);
 
@@ -1287,7 +1409,9 @@ async function getTaskResult(
     const statusData = await statusResponse.json();
 
     if (statusData.code !== 200) {
-      throw new UserError(`Status check failed: ${statusData.message}`);
+      throw new UserError(
+        `TaskId: ${taskId}, Status check failed: ${statusData.message}`
+      );
     }
 
     const { status, output, error } = statusData.data;
@@ -1296,15 +1420,19 @@ async function getTaskResult(
 
     if (status === "completed") {
       if (!output) {
-        throw new UserError("Task completed but no output found");
+        throw new UserError(
+          `TaskId: ${taskId}, Task completed but no output found`
+        );
       }
       const usage = statusData.data.meta.usage?.consume || "unknown";
 
-      return { usage, output };
+      return { taskId, usage, output };
     }
 
     if (status === "failed") {
-      throw new UserError(`Generation failed: ${error.message}`);
+      throw new UserError(
+        `TaskId: ${taskId}, Generation failed: ${error.message}`
+      );
     }
 
     await new Promise((resolve) =>
@@ -1312,7 +1440,9 @@ async function getTaskResult(
     );
   }
 
-  throw new UserError(`Generation timed out after ${timeout} seconds`);
+  throw new UserError(
+    `TaskId: ${taskId}, Generation timed out after ${timeout} seconds`
+  );
 }
 
 // Result parser
@@ -1398,6 +1528,40 @@ function parseVideoOutput(output: unknown): string {
   }
 
   return videoUrl;
+}
+
+interface LumaResult {
+  url: string;
+  width: number;
+  height: number;
+}
+
+const LumaOutputSchema = z
+  .object({
+    video_raw: z.object({
+      url: z.string(),
+      width: z.number(),
+      height: z.number(),
+    }),
+    last_frame: z.object({
+      url: z.string(),
+      width: z.number(),
+      height: z.number(),
+    }),
+  })
+  .refine((data) => data.video_raw && data.last_frame, {
+    message: "At least one video URL must be provided",
+    path: ["video_raw", "last_frame"],
+  });
+
+function parseLumaOutput(output: unknown): [LumaResult, LumaResult] {
+  const result = LumaOutputSchema.safeParse(output);
+
+  if (!result.success) {
+    throw new UserError(`Invalid luma output format: ${result.error.message}`);
+  }
+
+  return [result.data.video_raw, result.data.last_frame];
 }
 
 const TrellisOutputSchema = z
