@@ -112,7 +112,7 @@ function registerImageTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(taskId, output);
+      const urls = parseImageOutput(taskId, output, log);
       return {
         content: [
           {
@@ -156,7 +156,7 @@ function registerImageTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(taskId, output);
+      const urls = parseImageOutput(taskId, output, log);
       return {
         content: [
           {
@@ -210,7 +210,7 @@ function registerImageTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(taskId, output);
+      const urls = parseImageOutput(taskId, output, log);
       return {
         content: [
           {
@@ -264,7 +264,7 @@ function registerImageTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(taskId, output);
+      const urls = parseImageOutput(taskId, output, log);
       return {
         content: [
           {
@@ -318,7 +318,7 @@ function registerVideoTool(server: FastMCP) {
         config
       );
 
-      const url = parseVideoOutput(taskId, output);
+      const url = parseVideoOutput(taskId, output, log);
       return {
         content: [
           {
@@ -357,7 +357,7 @@ function registerVideoTool(server: FastMCP) {
         config
       );
 
-      const url = parseVideoOutput(taskId, output);
+      const url = parseVideoOutput(taskId, output, log);
       return {
         content: [
           {
@@ -500,7 +500,7 @@ function registerFluxTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(taskId, output);
+      const urls = parseImageOutput(taskId, output, log);
       return {
         content: [
           {
@@ -619,7 +619,7 @@ function registerFluxTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(taskId, output);
+      const urls = parseImageOutput(taskId, output, log);
       return {
         content: [
           {
@@ -704,7 +704,7 @@ function registerFluxTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(taskId, output);
+      const urls = parseImageOutput(taskId, output, log);
       return {
         content: [
           {
@@ -811,7 +811,7 @@ function registerFluxTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(taskId, output);
+      const urls = parseImageOutput(taskId, output, log);
       return {
         content: [
           {
@@ -911,7 +911,7 @@ function registerHunyuanTool(server: FastMCP) {
         config
       );
 
-      const url = parseVideoOutput(taskId, output);
+      const url = parseVideoOutput(taskId, output, log);
       return {
         content: [
           {
@@ -977,7 +977,7 @@ function registerSkyreelsTool(server: FastMCP) {
         config
       );
 
-      const url = parseVideoOutput(taskId, output);
+      const url = parseVideoOutput(taskId, output, log);
       return {
         content: [
           {
@@ -1058,7 +1058,7 @@ function registerWanTool(server: FastMCP) {
         config
       );
 
-      const url = parseVideoOutput(taskId, output);
+      const url = parseVideoOutput(taskId, output, log);
       return {
         content: [
           {
@@ -1111,7 +1111,7 @@ function registerMMAudioTool(server: FastMCP) {
         config
       );
 
-      const url = parseAudioOutput(taskId, output);
+      const url = parseAudioOutput(taskId, output, log);
       return {
         content: [
           {
@@ -1168,7 +1168,7 @@ function registerTTSTool(server: FastMCP) {
         config
       );
 
-      const url = parseAudioOutput(taskId, output);
+      const url = parseAudioOutput(taskId, output, log);
       return {
         content: [
           {
@@ -1219,7 +1219,7 @@ function registerMidjourneyTool(server: FastMCP) {
         config
       );
 
-      const urls = parseImageOutput(taskId, output);
+      const urls = parseImageOutput(taskId, output, log);
       return {
         content: [
           {
@@ -1295,7 +1295,7 @@ function registerKlingTool(server: FastMCP) {
         config
       );
 
-      const urls = parseKlingOutput(taskId, output);
+      const urls = parseKlingOutput(taskId, output, log);
       return {
         content: [
           {
@@ -1346,7 +1346,7 @@ function registerKlingTool(server: FastMCP) {
         config
       );
 
-      const urls = parseKlingOutput(taskId, output);
+      const urls = parseKlingOutput(taskId, output, log);
       return {
         content: [
           {
@@ -1441,7 +1441,7 @@ function registerSunoTool(server: FastMCP) {
         config
       );
 
-      const clips = parseSunoMusicOutput(taskId, output);
+      const clips = parseSunoMusicOutput(taskId, output, log);
       let content: Content[] = [];
       content.push({
         type: "text",
@@ -1516,7 +1516,7 @@ function registerLumaTool(server: FastMCP) {
         config
       );
 
-      const [video_raw, last_frame] = parseLumaOutput(taskId, output);
+      const [video_raw, last_frame] = parseLumaOutput(taskId, output, log);
       return {
         content: [
           {
@@ -1563,7 +1563,8 @@ function registerTrellisTool(server: FastMCP) {
 
       const [imageUrl, videoUrl, modelFileUrl] = parseTrellisOutput(
         taskId,
-        output
+        output,
+        log
       );
       return {
         content: [
@@ -1642,6 +1643,7 @@ async function getTaskResult(
     const statusData = await statusResponse.json();
 
     if (statusData.code !== 200) {
+      log.error(`Status check failed for task ${taskId}: ${statusData.message}`);
       throw new UserError(
         `TaskId: ${taskId}, Status check failed: ${statusData.message}`
       );
@@ -1649,22 +1651,42 @@ async function getTaskResult(
 
     const { status, output, error } = statusData.data;
 
-    log.info(`Task status: ${status}`);
+    log.info(`Task ${taskId} status: ${status}`);
+
+    // Add more detailed logging
+    if (status === "in_progress" && statusData.data.progress !== undefined) {
+      log.info(`Task ${taskId} progress: ${statusData.data.progress}%`);
+    }
 
     if (status === "completed") {
       if (!output) {
+        log.error(`Task ${taskId} completed but no output found`);
         throw new UserError(
           `TaskId: ${taskId}, Task completed but no output found`
         );
       }
-      const usage = statusData.data.meta.usage?.consume || "unknown";
+      const usage = statusData.data.meta?.usage?.consume || "unknown";
+      log.info(`Task ${taskId} completed successfully. Usage: ${usage}`);
+
+      // Don't log huge JSON objects that might crash the console
+      try {
+        const outputStr = JSON.stringify(output);
+        if (outputStr.length < 1000) {
+          log.debug(`Task ${taskId} output: ${outputStr}`);
+        } else {
+          log.debug(`Task ${taskId} output: [Large output, length: ${outputStr.length} chars]`);
+        }
+      } catch (err: any) {
+        log.debug(`Task ${taskId} output: [Could not stringify output: ${err.message}]`);
+      }
 
       return { taskId, usage, output };
     }
 
     if (status === "failed") {
+      log.error(`Task ${taskId} failed: ${error?.message || "Unknown error"}`);
       throw new UserError(
-        `TaskId: ${taskId}, Generation failed: ${error.message}`
+        `TaskId: ${taskId}, Generation failed: ${error?.message || "Unknown error"}`
       );
     }
 
@@ -1673,6 +1695,7 @@ async function getTaskResult(
     );
   }
 
+  log.error(`Task ${taskId} timed out after ${timeout} seconds`);
   throw new UserError(
     `TaskId: ${taskId}, Generation timed out after ${timeout} seconds`
   );
@@ -1683,37 +1706,65 @@ async function getTaskResult(
 const ImageOutputSchema = z
   .object({
     image_url: z.string().optional(),
-    image_urls: z.array(z.string()).optional(),
+    image_urls: z.array(z.string()).nullable().optional(),
+    temporary_image_urls: z.array(z.string()).nullable().optional(),
   })
   .refine(
-    (data) => data.image_url || (data.image_urls && data.image_urls.length > 0),
+    (data) => 
+      data.image_url || 
+      (data.image_urls && data.image_urls.length > 0) ||
+      (data.temporary_image_urls && data.temporary_image_urls.length > 0),
     {
       message: "At least one image URL must be provided",
-      path: ["image_url", "image_urls"],
+      path: ["image_url", "image_urls", "temporary_image_urls"],
     }
   );
 
-function parseImageOutput(taskId: string, output: unknown): string[] {
+function parseImageOutput(taskId: string, output: unknown, log?: any): string[] {
+  if (log) {
+    log.info(`Parsing image output for task ${taskId}`);
+    log.debug(`Raw output: ${JSON.stringify(output)}`);
+  }
+  
   const result = ImageOutputSchema.safeParse(output);
 
   if (!result.success) {
+    if (log) {
+      log.error(`Invalid image output format for task ${taskId}: ${result.error.message}`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Invalid image output format: ${result.error.message}`
     );
   }
 
   const imageOutput = result.data;
+  if (log) {
+    log.debug(`Image URLs found - image_url: ${imageOutput.image_url || 'none'}, image_urls count: ${imageOutput.image_urls?.length || 0}, temporary_image_urls count: ${imageOutput.temporary_image_urls?.length || 0}`);
+  }
+  
+  // Determine if this is a Midjourney response (has temporary_image_urls but null image_urls)
+  const isMidjourney = Array.isArray(imageOutput.temporary_image_urls) && 
+                      imageOutput.temporary_image_urls.length > 0 && 
+                      imageOutput.image_urls === null;
+  
   const imageUrls = [
     ...(imageOutput.image_url ? [imageOutput.image_url] : []),
-    ...(imageOutput.image_urls || []),
+    ...(!isMidjourney && imageOutput.image_urls ? imageOutput.image_urls : []),
+    ...(imageOutput.temporary_image_urls || []),
   ].filter(Boolean);
 
   if (imageUrls.length === 0) {
+    if (log) {
+      log.error(`No image URLs found for task ${taskId}`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Task completed but no image URLs found`
     );
   }
 
+  if (log) {
+    log.info(`Found ${imageUrls.length} image URLs for task ${taskId}`);
+  }
   return imageUrls;
 }
 
@@ -1726,10 +1777,13 @@ const AudioOutputSchema = z
     path: ["audio_url"],
   });
 
-function parseAudioOutput(taskId: string, output: unknown): string {
+function parseAudioOutput(taskId: string, output: unknown, log?: any): string {
   const result = AudioOutputSchema.safeParse(output);
 
   if (!result.success) {
+    if (log) {
+      log.error(`TaskId: ${taskId}, Invalid audio output format: ${result.error.message}`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Invalid audio output format: ${result.error.message}`
     );
@@ -1738,6 +1792,9 @@ function parseAudioOutput(taskId: string, output: unknown): string {
   const audioUrl = result.data.audio_url;
 
   if (!audioUrl) {
+    if (log) {
+      log.error(`TaskId: ${taskId}, Task completed but no audio URL found`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Task completed but no audio URL found`
     );
@@ -1755,10 +1812,13 @@ const VideoOutputSchema = z
     path: ["video_url"],
   });
 
-function parseVideoOutput(taskId: string, output: unknown): string {
+function parseVideoOutput(taskId: string, output: unknown, log?: any): string {
   const result = VideoOutputSchema.safeParse(output);
 
   if (!result.success) {
+    if (log) {
+      log.error(`TaskId: ${taskId}, Invalid video output format: ${result.error.message}`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Invalid video output format: ${result.error.message}`
     );
@@ -1767,6 +1827,9 @@ function parseVideoOutput(taskId: string, output: unknown): string {
   const videoUrl = result.data.video_url;
 
   if (!videoUrl) {
+    if (log) {
+      log.error(`TaskId: ${taskId}, Task completed but no video URL found`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Task completed but no video URL found`
     );
@@ -1787,10 +1850,13 @@ const KlingOutputSchema = z.object({
   }))
 })
 
-function parseKlingOutput(taskId: string, output: unknown): string[] {
+function parseKlingOutput(taskId: string, output: unknown, log?: any): string[] {
   const result = KlingOutputSchema.safeParse(output);
 
   if (!result.success) {
+    if (log) {
+      log.error(`TaskId: ${taskId}, Invalid kling output format: ${result.error.message}`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Invalid kling output format: ${result.error.message}`
     );
@@ -1803,6 +1869,9 @@ function parseKlingOutput(taskId: string, output: unknown): string[] {
   }
 
   if (urls.length === 0) {
+    if (log) {
+      log.error(`TaskId: ${taskId}, Task completed but no video/work URLs found`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Task completed but no video/work URLs found`
     );
@@ -1837,11 +1906,15 @@ const LumaOutputSchema = z
 
 function parseLumaOutput(
   taskId: string,
-  output: unknown
+  output: unknown,
+  log?: any
 ): [LumaResult, LumaResult] {
   const result = LumaOutputSchema.safeParse(output);
 
   if (!result.success) {
+    if (log) {
+      log.error(`TaskId: ${taskId}, Invalid luma output format: ${result.error.message}`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Invalid luma output format: ${result.error.message}`
     );
@@ -1867,11 +1940,15 @@ const SunoMusicOutputSchema = z.object({
 
 function parseSunoMusicOutput(
   taskId: string,
-  output: unknown
+  output: unknown,
+  log?: any
 ): SunoMusicClip[] {
   const result = SunoMusicOutputSchema.safeParse(output);
 
   if (!result.success) {
+    if (log) {
+      log.error(`TaskId: ${taskId}, Invalid suno music output format: ${result.error.message}`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Invalid suno music output format: ${result.error.message}`
     );
@@ -1886,6 +1963,9 @@ function parseSunoMusicOutput(
   }
 
   if (results.length === 0) {
+    if (log) {
+      log.error(`TaskId: ${taskId}, Task completed but no audio/image URLs found`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Task completed but no audio/image URLs found`
     );
@@ -1911,11 +1991,15 @@ const TrellisOutputSchema = z
 
 function parseTrellisOutput(
   taskId: string,
-  output: unknown
+  output: unknown,
+  log?: any
 ): [string, string, string] {
   const result = TrellisOutputSchema.safeParse(output);
 
   if (!result.success) {
+    if (log) {
+      log.error(`TaskId: ${taskId}, Invalid trellis output format: ${result.error.message}`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Invalid trellis output format: ${result.error.message}`
     );
@@ -1926,6 +2010,9 @@ function parseTrellisOutput(
   const modelFileUrl = result.data.model_file;
 
   if (!imageUrl || !videoUrl || !modelFileUrl) {
+    if (log) {
+      log.error(`TaskId: ${taskId}, Task completed but no image/video/model file URL found`);
+    }
     throw new UserError(
       `TaskId: ${taskId}, Task completed but no image/video/model file URL found`
     );
