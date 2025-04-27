@@ -20,13 +20,13 @@ const isProduction = envValue === 'production';
 // Configure logging levels based on environment
 const logger = {
   debug: (msg: string) => {
-    if (!isProduction) console.log(`[DEBUG] ${msg}`);
+    if (!isProduction) process.stderr.write(`[DEBUG] ${msg}\n`);
   },
   info: (msg: string) => {
-    if (!isProduction) console.log(`[INFO] ${msg}`);
+    if (!isProduction) process.stderr.write(`[INFO] ${msg}\n`);
   },
-  warn: (msg: string) => console.warn(`[WARN] ${msg}`),
-  error: (msg: string) => console.error(`[ERROR] ${msg}`),
+  warn: (msg: string) => process.stderr.write(`[WARN] ${msg}\n`),
+  error: (msg: string) => process.stderr.write(`[ERROR] ${msg}\n`),
 };
 
 // Log environment information
