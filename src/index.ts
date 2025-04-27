@@ -9,7 +9,28 @@ if (!process.env.PIAPI_API_KEY) {
   process.exit(1);
 }
 
+// Parse command line arguments for environment
+const args = process.argv.slice(2);
+const envArg = args.find(arg => arg.startsWith('--env='));
+const envValue = envArg ? envArg.split('=')[1] : process.env.NODE_ENV;
+
 const apiKey: string = process.env.PIAPI_API_KEY;
+const isProduction = envValue === 'production';
+
+// Configure logging levels based on environment
+const logger = {
+  debug: (msg: string) => {
+    if (!isProduction) console.log(`[DEBUG] ${msg}`);
+  },
+  info: (msg: string) => {
+    if (!isProduction) console.log(`[INFO] ${msg}`);
+  },
+  warn: (msg: string) => console.warn(`[WARN] ${msg}`),
+  error: (msg: string) => console.error(`[ERROR] ${msg}`),
+};
+
+// Log environment information
+logger.info(`Running in ${isProduction ? 'production' : 'development'} mode`);
 
 const server = new FastMCP({
   name: "piapi",
@@ -1624,7 +1645,9 @@ async function getTaskResult(
   timeout: number
 ): Promise<{ taskId: string; usage: string; output: unknown }> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    log.info(`Checking task status (attempt ${attempt + 1})...`);
+    // Use environment-specific logger, fallback to provided log if exists
+    const useLogger = log || logger;
+    useLogger.info(`Checking task ${taskId} status (attempt ${attempt + 1}/${maxAttempts})...`);
 
     reportProgress({
       progress: (attempt / maxAttempts) * 100,
@@ -1643,7 +1666,7 @@ async function getTaskResult(
     const statusData = await statusResponse.json();
 
     if (statusData.code !== 200) {
-      log.error(`Status check failed for task ${taskId}: ${statusData.message}`);
+      useLogger.error(`Status check failed for task ${taskId}: ${statusData.message}`);
       throw new UserError(
         `TaskId: ${taskId}, Status check failed: ${statusData.message}`
       );
@@ -1651,40 +1674,40 @@ async function getTaskResult(
 
     const { status, output, error } = statusData.data;
 
-    log.info(`Task ${taskId} status: ${status}`);
-
-    // Add more detailed logging
+    useLogger.info(`Task ${taskId} status: ${status}`);
+    
+    // Safely check if progress property exists
     if (status === "in_progress" && statusData.data.progress !== undefined) {
-      log.info(`Task ${taskId} progress: ${statusData.data.progress}%`);
+      useLogger.info(`Task ${taskId} progress: ${statusData.data.progress}%`);
     }
 
     if (status === "completed") {
       if (!output) {
-        log.error(`Task ${taskId} completed but no output found`);
+        useLogger.error(`Task ${taskId} completed but no output found`);
         throw new UserError(
           `TaskId: ${taskId}, Task completed but no output found`
         );
       }
       const usage = statusData.data.meta?.usage?.consume || "unknown";
-      log.info(`Task ${taskId} completed successfully. Usage: ${usage}`);
-
+      useLogger.info(`Task ${taskId} completed successfully. Usage: ${usage}`);
+      
       // Don't log huge JSON objects that might crash the console
       try {
         const outputStr = JSON.stringify(output);
         if (outputStr.length < 1000) {
-          log.debug(`Task ${taskId} output: ${outputStr}`);
+          useLogger.debug(`Task ${taskId} output: ${outputStr}`);
         } else {
-          log.debug(`Task ${taskId} output: [Large output, length: ${outputStr.length} chars]`);
+          useLogger.debug(`Task ${taskId} output: [Large output, length: ${outputStr.length} chars]`);
         }
       } catch (err: any) {
-        log.debug(`Task ${taskId} output: [Could not stringify output: ${err.message}]`);
+        useLogger.debug(`Task ${taskId} output: [Could not stringify output: ${err.message}]`);
       }
 
       return { taskId, usage, output };
     }
 
     if (status === "failed") {
-      log.error(`Task ${taskId} failed: ${error?.message || "Unknown error"}`);
+      useLogger.error(`Task ${taskId} failed: ${error?.message || "Unknown error"}`);
       throw new UserError(
         `TaskId: ${taskId}, Generation failed: ${error?.message || "Unknown error"}`
       );
@@ -1695,7 +1718,7 @@ async function getTaskResult(
     );
   }
 
-  log.error(`Task ${taskId} timed out after ${timeout} seconds`);
+  logger.error(`Task ${taskId} timed out after ${timeout} seconds`);
   throw new UserError(
     `TaskId: ${taskId}, Generation timed out after ${timeout} seconds`
   );
@@ -1721,26 +1744,22 @@ const ImageOutputSchema = z
   );
 
 function parseImageOutput(taskId: string, output: unknown, log?: any): string[] {
-  if (log) {
-    log.info(`Parsing image output for task ${taskId}`);
-    log.debug(`Raw output: ${JSON.stringify(output)}`);
-  }
+  const useLogger = log || logger;
+  
+  useLogger.info(`Parsing image output for task ${taskId}`);
+  useLogger.debug(`Raw output: ${JSON.stringify(output)}`);
   
   const result = ImageOutputSchema.safeParse(output);
 
   if (!result.success) {
-    if (log) {
-      log.error(`Invalid image output format for task ${taskId}: ${result.error.message}`);
-    }
+    useLogger.error(`Invalid image output format for task ${taskId}: ${result.error.message}`);
     throw new UserError(
       `TaskId: ${taskId}, Invalid image output format: ${result.error.message}`
     );
   }
 
   const imageOutput = result.data;
-  if (log) {
-    log.debug(`Image URLs found - image_url: ${imageOutput.image_url || 'none'}, image_urls count: ${imageOutput.image_urls?.length || 0}, temporary_image_urls count: ${imageOutput.temporary_image_urls?.length || 0}`);
-  }
+  useLogger.debug(`Image URLs found - image_url: ${imageOutput.image_url || 'none'}, image_urls count: ${imageOutput.image_urls?.length || 0}, temporary_image_urls count: ${imageOutput.temporary_image_urls?.length || 0}`);
   
   // Determine if this is a Midjourney response (has temporary_image_urls but null image_urls)
   const isMidjourney = Array.isArray(imageOutput.temporary_image_urls) && 
@@ -1754,17 +1773,13 @@ function parseImageOutput(taskId: string, output: unknown, log?: any): string[] 
   ].filter(Boolean);
 
   if (imageUrls.length === 0) {
-    if (log) {
-      log.error(`No image URLs found for task ${taskId}`);
-    }
+    useLogger.error(`No image URLs found for task ${taskId}`);
     throw new UserError(
       `TaskId: ${taskId}, Task completed but no image URLs found`
     );
   }
 
-  if (log) {
-    log.info(`Found ${imageUrls.length} image URLs for task ${taskId}`);
-  }
+  useLogger.info(`Found ${imageUrls.length} image URLs for task ${taskId}`);
   return imageUrls;
 }
 
@@ -1778,12 +1793,15 @@ const AudioOutputSchema = z
   });
 
 function parseAudioOutput(taskId: string, output: unknown, log?: any): string {
+  const useLogger = log || logger;
+  
+  useLogger.info(`Parsing audio output for task ${taskId}`);
+  useLogger.debug(`Raw output: ${JSON.stringify(output)}`);
+  
   const result = AudioOutputSchema.safeParse(output);
 
   if (!result.success) {
-    if (log) {
-      log.error(`TaskId: ${taskId}, Invalid audio output format: ${result.error.message}`);
-    }
+    useLogger.error(`Invalid audio output format for task ${taskId}: ${result.error.message}`);
     throw new UserError(
       `TaskId: ${taskId}, Invalid audio output format: ${result.error.message}`
     );
@@ -1792,14 +1810,13 @@ function parseAudioOutput(taskId: string, output: unknown, log?: any): string {
   const audioUrl = result.data.audio_url;
 
   if (!audioUrl) {
-    if (log) {
-      log.error(`TaskId: ${taskId}, Task completed but no audio URL found`);
-    }
+    useLogger.error(`Task ${taskId} completed but no audio URL found`);
     throw new UserError(
       `TaskId: ${taskId}, Task completed but no audio URL found`
     );
   }
 
+  useLogger.info(`Found audio URL for task ${taskId}: ${audioUrl}`);
   return audioUrl;
 }
 
@@ -1813,12 +1830,15 @@ const VideoOutputSchema = z
   });
 
 function parseVideoOutput(taskId: string, output: unknown, log?: any): string {
+  const useLogger = log || logger;
+  
+  useLogger.info(`Parsing video output for task ${taskId}`);
+  useLogger.debug(`Raw output: ${JSON.stringify(output)}`);
+  
   const result = VideoOutputSchema.safeParse(output);
 
   if (!result.success) {
-    if (log) {
-      log.error(`TaskId: ${taskId}, Invalid video output format: ${result.error.message}`);
-    }
+    useLogger.error(`Invalid video output format for task ${taskId}: ${result.error.message}`);
     throw new UserError(
       `TaskId: ${taskId}, Invalid video output format: ${result.error.message}`
     );
@@ -1827,14 +1847,13 @@ function parseVideoOutput(taskId: string, output: unknown, log?: any): string {
   const videoUrl = result.data.video_url;
 
   if (!videoUrl) {
-    if (log) {
-      log.error(`TaskId: ${taskId}, Task completed but no video URL found`);
-    }
+    useLogger.error(`Task ${taskId} completed but no video URL found`);
     throw new UserError(
       `TaskId: ${taskId}, Task completed but no video URL found`
     );
   }
 
+  useLogger.info(`Found video URL for task ${taskId}: ${videoUrl}`);
   return videoUrl;
 }
 
@@ -1851,12 +1870,15 @@ const KlingOutputSchema = z.object({
 })
 
 function parseKlingOutput(taskId: string, output: unknown, log?: any): string[] {
+  const useLogger = log || logger;
+  
+  useLogger.info(`Parsing Kling output for task ${taskId}`);
+  useLogger.debug(`Raw output: ${JSON.stringify(output)}`);
+  
   const result = KlingOutputSchema.safeParse(output);
 
   if (!result.success) {
-    if (log) {
-      log.error(`TaskId: ${taskId}, Invalid kling output format: ${result.error.message}`);
-    }
+    useLogger.error(`Invalid kling output format for task ${taskId}: ${result.error.message}`);
     throw new UserError(
       `TaskId: ${taskId}, Invalid kling output format: ${result.error.message}`
     );
@@ -1869,14 +1891,13 @@ function parseKlingOutput(taskId: string, output: unknown, log?: any): string[] 
   }
 
   if (urls.length === 0) {
-    if (log) {
-      log.error(`TaskId: ${taskId}, Task completed but no video/work URLs found`);
-    }
+    useLogger.error(`Task ${taskId} completed but no video/work URLs found`);
     throw new UserError(
       `TaskId: ${taskId}, Task completed but no video/work URLs found`
     );
   }
 
+  useLogger.info(`Found ${urls.length} Kling URLs for task ${taskId}`);
   return urls;
 }
 
@@ -1909,17 +1930,21 @@ function parseLumaOutput(
   output: unknown,
   log?: any
 ): [LumaResult, LumaResult] {
+  const useLogger = log || logger;
+  
+  useLogger.info(`Parsing Luma output for task ${taskId}`);
+  useLogger.debug(`Raw output: ${JSON.stringify(output)}`);
+  
   const result = LumaOutputSchema.safeParse(output);
 
   if (!result.success) {
-    if (log) {
-      log.error(`TaskId: ${taskId}, Invalid luma output format: ${result.error.message}`);
-    }
+    useLogger.error(`Invalid luma output format for task ${taskId}: ${result.error.message}`);
     throw new UserError(
       `TaskId: ${taskId}, Invalid luma output format: ${result.error.message}`
     );
   }
 
+  useLogger.info(`Found Luma video and last frame for task ${taskId}`);
   return [result.data.video_raw, result.data.last_frame];
 }
 
@@ -1943,12 +1968,15 @@ function parseSunoMusicOutput(
   output: unknown,
   log?: any
 ): SunoMusicClip[] {
+  const useLogger = log || logger;
+  
+  useLogger.info(`Parsing Suno music output for task ${taskId}`);
+  useLogger.debug(`Raw output: ${JSON.stringify(output)}`);
+  
   const result = SunoMusicOutputSchema.safeParse(output);
 
   if (!result.success) {
-    if (log) {
-      log.error(`TaskId: ${taskId}, Invalid suno music output format: ${result.error.message}`);
-    }
+    useLogger.error(`Invalid suno music output format for task ${taskId}: ${result.error.message}`);
     throw new UserError(
       `TaskId: ${taskId}, Invalid suno music output format: ${result.error.message}`
     );
@@ -1963,14 +1991,13 @@ function parseSunoMusicOutput(
   }
 
   if (results.length === 0) {
-    if (log) {
-      log.error(`TaskId: ${taskId}, Task completed but no audio/image URLs found`);
-    }
+    useLogger.error(`Task ${taskId} completed but no audio/image URLs found`);
     throw new UserError(
       `TaskId: ${taskId}, Task completed but no audio/image URLs found`
     );
   }
 
+  useLogger.info(`Found ${results.length} Suno music clips for task ${taskId}`);
   return results;
 }
 
@@ -1994,12 +2021,15 @@ function parseTrellisOutput(
   output: unknown,
   log?: any
 ): [string, string, string] {
+  const useLogger = log || logger;
+  
+  useLogger.info(`Parsing Trellis output for task ${taskId}`);
+  useLogger.debug(`Raw output: ${JSON.stringify(output)}`);
+  
   const result = TrellisOutputSchema.safeParse(output);
 
   if (!result.success) {
-    if (log) {
-      log.error(`TaskId: ${taskId}, Invalid trellis output format: ${result.error.message}`);
-    }
+    useLogger.error(`Invalid trellis output format for task ${taskId}: ${result.error.message}`);
     throw new UserError(
       `TaskId: ${taskId}, Invalid trellis output format: ${result.error.message}`
     );
@@ -2010,13 +2040,12 @@ function parseTrellisOutput(
   const modelFileUrl = result.data.model_file;
 
   if (!imageUrl || !videoUrl || !modelFileUrl) {
-    if (log) {
-      log.error(`TaskId: ${taskId}, Task completed but no image/video/model file URL found`);
-    }
+    useLogger.error(`Task ${taskId} completed but no image/video/model file URL found`);
     throw new UserError(
       `TaskId: ${taskId}, Task completed but no image/video/model file URL found`
     );
   }
 
+  useLogger.info(`Found Trellis outputs for task ${taskId}`);
   return [imageUrl, videoUrl, modelFileUrl];
 }
