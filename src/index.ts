@@ -51,6 +51,7 @@ function registerTools(server: FastMCP) {
   registerLumaTool(server);
   registerSunoTool(server);
   registerTrellisTool(server);
+  registerHailuoTool(server);
 }
 
 // Tool Definitions
@@ -1533,6 +1534,10 @@ const TRELLIS_MODEL_CONFIG: Record<string, BaseConfig> = {
   trellis: { maxAttempts: 30, timeout: 600 },
 };
 
+const HAILUO_MODEL_CONFIG: Record<string, BaseConfig> = {
+  hailuo: { maxAttempts: 60, timeout: 900 },
+};
+
 function registerTrellisTool(server: FastMCP) {
   server.addTool({
     name: "generate_3d_model",
@@ -1570,6 +1575,77 @@ function registerTrellisTool(server: FastMCP) {
           {
             type: "text",
             text: `TaskId: ${taskId}\n3d model generated successfully!\nUsage: ${usage} tokens\nImage url:\n${imageUrl}\nVideo url:\n${videoUrl}\nModel file url:\n${modelFileUrl}`,
+          },
+        ],
+      };
+    },
+  });
+}
+
+function registerHailuoTool(server: FastMCP) {
+  server.addTool({
+    name: "generate_video_hailuo",
+    description: "Generate a video using Hailuo",
+    parameters: z.object({
+      prompt: z
+        .string()
+        .max(2000)
+        .describe("The prompt to generate a video from (max 2000 characters)"),
+      imageUrl: z
+        .string()
+        .url()
+        .optional()
+        .describe("The image URL for image-to-video models"),
+      expandPrompt: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("Whether to expand the prompt"),
+      model: z
+        .enum(["t2v-01", "t2v-01-director", "i2v-01", "i2v-01-live", "i2v-01-director", "s2v-01"])
+        .optional()
+        .default("t2v-01")
+        .describe("The model to use for video generation. t2v models are text-to-video, i2v models are image-to-video, s2v-01 requires human face detection"),
+    }),
+    execute: async (args, { log, reportProgress }) => {
+      if (!args.prompt) {
+        throw new UserError("Prompt is required");
+      }
+
+      // Validate model requirements
+      const isImageToVideo = args.model.startsWith("i2v") || args.model === "s2v-01";
+      if (isImageToVideo && !args.imageUrl) {
+        throw new UserError(`Image URL is required for ${args.model} model`);
+      }
+      if (!isImageToVideo && args.imageUrl) {
+        log.warn(`Image URL provided but ${args.model} is a text-to-video model`);
+      }
+
+      const config = HAILUO_MODEL_CONFIG["hailuo"];
+
+      const requestBody = JSON.stringify({
+        model: args.model,
+        task_type: "video_generation",
+        input: {
+          prompt: args.prompt,
+          image_url: args.imageUrl,
+          expand_prompt: args.expandPrompt,
+        },
+      });
+
+      const { taskId, usage, output } = await handleTask(
+        log,
+        reportProgress,
+        requestBody,
+        config
+      );
+
+      const url = parseVideoOutput(taskId, output);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `TaskId: ${taskId}\nVideo generated successfully!\nUsage: ${usage} tokens\nVideo url:\n${url}`,
           },
         ],
       };
