@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/apinetwork-piapi-mcp-server-badge.png)](https://mseep.ai/app/apinetwork-piapi-mcp-server)
+
 # piapi-mcp-server
 
 [![Website](https://img.shields.io/badge/Website-piapi.ai-blue?style=flat-square&logo=internet-explorer)](https://piapi.ai)
