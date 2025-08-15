@@ -4,6 +4,8 @@
 [![Documentation](https://img.shields.io/badge/Documentation-docs-green?style=flat-square&logo=bookstack)](https://piapi.ai/docs)
 [![Discord](https://img.shields.io/badge/Discord-Join%20chat-7289da?style=flat-square&logo=discord)](https://discord.gg/qRRvcGa7Wb)
 
+[![smithery badge](https://smithery.ai/badge/piapi-mcp-server)](https://smithery.ai/server/piapi-mcp-server)
+
 A TypeScript implementation of a Model Context Protocol (MCP) server that integrates with PiAPI's API. PiAPI makes user able to generate media content with Midjourney/Flux/Kling/LumaLabs/Udio/Chrip/Trellis directly from Claude or any other MCP-compatible apps.
 
 <a href="https://glama.ai/mcp/servers/ywvke8xruo"><img width="380" height="200" src="https://glama.ai/mcp/servers/ywvke8xruo/badge" alt="PiAPI-Server MCP server" /></a>
@@ -43,6 +45,15 @@ Note: Time-consuming tools like video generation may not complete due to Claude'
 
 ## Installation
 
+### Installing via Smithery
+
+To install PiAPI MCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/piapi-mcp-server):
+
+```bash
+npx -y @smithery/cli install piapi-mcp-server --client claude
+```
+
+### Manual Installation
 1. Clone the repository:
 
 ```bash
