@@ -4,6 +4,8 @@
 [![Documentation](https://img.shields.io/badge/Documentation-docs-green?style=flat-square&logo=bookstack)](https://piapi.ai/docs)
 [![Discord](https://img.shields.io/badge/Discord-Join%20chat-7289da?style=flat-square&logo=discord)](https://discord.gg/qRRvcGa7Wb)
 
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/apinetwork/piapi-mcp-server)](https://archestra.ai/mcp-catalog/apinetwork__piapi-mcp-server)
+
 [![smithery badge](https://smithery.ai/badge/piapi-mcp-server)](https://smithery.ai/server/piapi-mcp-server)
 
 A TypeScript implementation of a Model Context Protocol (MCP) server that integrates with PiAPI's API. PiAPI makes user able to generate media content with Midjourney/Flux/Kling/LumaLabs/Udio/Chrip/Trellis directly from Claude or any other MCP-compatible apps.
