@@ -33,6 +33,10 @@ Note: Time-consuming tools like video generation may not complete due to Claude'
 - [x] Trellis 3D model generation from image
 - [ ] Workflow planning inside LLMs
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/apinetwork-piapi-mcp-server).
+
 ## Working with Claude Desktop Example
 
 ![image](./assets/Claude-desktop.png)
