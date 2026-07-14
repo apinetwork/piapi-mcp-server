@@ -9,7 +9,12 @@
   },
   "scripts": {
     "build": "tsc",
-    "inspect": "npx fastmcp inspect dist/index.js"
+    "inspect": "npx fastmcp inspect dist/index.js",
+    "sync": "node dist/sync/cli.js diff",
+    "sync:snapshot": "node dist/sync/cli.js snapshot",
+    "sync:accept": "node dist/sync/cli.js accept",
+    "sync:report": "node dist/sync/cli.js report-file sync-report.md",
+    "test:sync": "node dist/sync/selftest.js"
   },
   "dependencies": {
     "dotenv": "^16.3.1",
