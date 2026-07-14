@@ -14,8 +14,8 @@
 //   report-file <path>  Like `diff` but also writes the report to <path>.
 //
 // Source selection (see fetchers.ts):
-//   default: Apidog Open API  (needs APIDOG_ACCESS_TOKEN, project 675356)
-//   --file <openapi.json> or PIAPI_SYNC_SOURCE=file  (offline / browser export)
+//   default: PiAPI Manager GitHub Postman contract
+//   --file <openapi.json> or PIAPI_SYNC_SOURCE=file  (offline override)
 
 import { writeFile } from "node:fs/promises";
 import { config } from "dotenv";
@@ -113,14 +113,17 @@ async function main() {
           "  report-file [path]    Write the Markdown diff report to a file",
           "",
           "Options:",
-          "  --source apidog|file  Override source (default from env)",
+          "  --source github|file  Override source (default from env)",
           "  --file <openapi.json> Use a local OpenAPI file as source",
           "  --out <path>          Output path for report-file",
           "",
           "Env:",
-          "  APIDOG_ACCESS_TOKEN   Apidog maintainer token (apidog source)",
-          "  APIDOG_PROJECT_ID     Apidog project id (default 675356 = PiAPI)",
-          "  PIAPI_SYNC_SOURCE     apidog|file",
+          "  PIAPI_SYNC_SOURCE     github|file (default github)",
+          "  PIAPI_GITHUB_OWNER    PiAPI Manager GitHub owner",
+          "  PIAPI_GITHUB_REPO     PiAPI Manager GitHub repository",
+          "  PIAPI_GITHUB_PATH     Versioned Postman contract path",
+          "  PIAPI_GITHUB_REF      Branch or tag for the contract (default main)",
+          "  PIAPI_CONTRACT_GITHUB_TOKEN  Optional contents:read token for a private source repo",
           "  PIAPI_OPENAPI_FILE    Path to OpenAPI json (file source)",
         ].join("\n") + "\n"
       );

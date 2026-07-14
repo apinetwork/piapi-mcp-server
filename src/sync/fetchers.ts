@@ -1,122 +1,192 @@
-// OpenAPI fetchers for the sync task.
+// API-contract fetchers for the PiAPI -> MCP sync task.
 //
-// The source of truth for the PiAPI API surface is the PiAPI Apidog project
-// (id 675356, team builtopia), which is what powers https://piapi.ai/docs.
-// Apidog exposes an Open API `export-openapi` endpoint, but it requires an
-// access token with "project maintainer" privilege. We therefore support two
-// interchangeable sources so the task can run either fully headless (token) or
-// from a spec file exported by other means (e.g. Apidog UI / browser session):
-//
-//   - ApidogOpenApiFetcher  -> needs APIDOG_ACCESS_TOKEN + APIDOG_PROJECT_ID
-//   - FileOpenApiFetcher     -> reads a local OpenAPI json (path via arg/env)
-//
-// Selection is done by getFetcher() based on env, so ops can flip sources
-// without touching the diff engine.
+// The default source is the versioned Postman collection maintained with PiAPI
+// Manager source code in GitHub. This keeps MCP independent of Apidog. The
+// collection is transformed into the small OpenAPI subset consumed by the
+// existing normalizer; no pricing data is read or emitted.
 
 import { readFile } from "node:fs/promises";
-import type { OpenApiDocument, OpenApiFetcher } from "./types.js";
+import type { JsonSchema, OpenApiDocument, OpenApiFetcher } from "./types.js";
 
-const APIDOG_API_BASE = "https://api.apidog.com";
-const APIDOG_API_VERSION = "2024-03-28";
+const DEFAULT_GITHUB_OWNER = "Gocyber-world";
+const DEFAULT_GITHUB_REPO = "midjourney-http-v2";
+const DEFAULT_GITHUB_PATH = "Go API.postman_collection.json";
+const DEFAULT_GITHUB_REF = "main";
 
 export interface FetcherOptions {
-  /** Override source: "apidog" | "file". Defaults to auto-detect from env. */
+  /** github (default) or file (offline OpenAPI JSON). */
   source?: string;
-  /** File path for the file fetcher. */
   filePath?: string;
 }
 
-/**
- * Pulls the PiAPI OpenAPI document from Apidog's Open API.
- * Docs: https://docs.apidog.com/openapi (export-openapi).
- */
-export class ApidogOpenApiFetcher implements OpenApiFetcher {
-  id = "apidog";
+/** Fetches PiAPI's checked-in Postman contract from GitHub's raw endpoint. */
+export class GitHubPostmanFetcher implements OpenApiFetcher {
+  id: string;
+
   constructor(
-    private readonly token: string,
-    private readonly projectId: string
-  ) {}
+    private readonly owner: string,
+    private readonly repo: string,
+    private readonly path: string,
+    private readonly ref: string
+  ) {
+    this.id = `github:${owner}/${repo}@${ref}:${path}`;
+  }
 
   async fetch(): Promise<OpenApiDocument> {
-    const url = `${APIDOG_API_BASE}/v1/projects/${this.projectId}/export-openapi?locale=en-US`;
+    const encodedPath = this.path.split("/").map(encodeURIComponent).join("/");
+    const url = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${encodedPath}?ref=${encodeURIComponent(this.ref)}`;
+    const token = process.env.PIAPI_CONTRACT_GITHUB_TOKEN;
     const res = await fetch(url, {
-      method: "POST",
       headers: {
-        Authorization: `Bearer ${this.token}`,
-        "X-Apidog-Api-Version": APIDOG_API_VERSION,
-        "Content-Type": "application/json",
+        Accept: "application/vnd.github+json",
+        "User-Agent": "piapi-mcp-sync",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({
-        scope: { type: "ALL" },
-        options: { includeApidogExtensionProperties: false },
-        oasVersion: "3.0",
-        exportFormat: "JSON",
-      }),
     });
-
-    const text = await res.text();
     if (!res.ok) {
       throw new Error(
-        `Apidog export-openapi failed (HTTP ${res.status}): ${text.slice(0, 500)}`
+        `GitHub Postman contract fetch failed (HTTP ${res.status}); configure PIAPI_CONTRACT_GITHUB_TOKEN with contents:read on the PiAPI Manager repository if the contract is private`
       );
     }
-    let doc: unknown;
+    const response = asRecord(await res.json());
+    const content = typeof response?.content === "string" ? response.content.replace(/\n/g, "") : "";
+    if (!content || typeof response?.encoding !== "string" || response.encoding.toLowerCase() !== "base64") {
+      throw new Error("GitHub Postman contract response did not contain base64 file content");
+    }
+    let collection: unknown;
     try {
-      doc = JSON.parse(text);
+      collection = JSON.parse(Buffer.from(content, "base64").toString("utf8"));
     } catch {
-      throw new Error(
-        `Apidog export-openapi returned non-JSON body: ${text.slice(0, 200)}`
-      );
+      throw new Error("GitHub Postman contract returned invalid JSON");
     }
-    // Apidog may wrap the spec in {data: ...} on some plans; unwrap if needed.
-    const maybe = doc as Record<string, unknown>;
-    if (maybe && typeof maybe === "object" && "openapi" in maybe) {
-      return maybe as OpenApiDocument;
-    }
-    if (maybe && typeof maybe === "object" && "data" in maybe) {
-      return maybe.data as OpenApiDocument;
-    }
-    return maybe as OpenApiDocument;
+    return postmanCollectionToOpenApi(collection);
   }
 }
 
-/** Reads an OpenAPI json from disk (for offline runs / testing / browser export). */
+/** Reads a local OpenAPI JSON document for offline development and recovery. */
 export class FileOpenApiFetcher implements OpenApiFetcher {
   id = "file";
   constructor(private readonly path: string) {}
 
   async fetch(): Promise<OpenApiDocument> {
     const raw = await readFile(this.path, "utf8");
-    return JSON.parse(raw) as OpenApiDocument;
+    const parsed = JSON.parse(raw) as unknown;
+    const record = asRecord(parsed);
+    return Array.isArray(record?.item) ? postmanCollectionToOpenApi(parsed) : (parsed as OpenApiDocument);
   }
 }
 
-/** Chooses a fetcher based on options then env. Throws with actionable guidance. */
-export function getFetcher(opts: FetcherOptions = {}): OpenApiFetcher {
-  const source =
-    opts.source || process.env.PIAPI_SYNC_SOURCE || (opts.filePath ? "file" : "apidog");
+/** Converts only POST /api/v1/task Postman examples into normalizer input. */
+export function postmanCollectionToOpenApi(collection: unknown): OpenApiDocument {
+  const root = asRecord(collection);
+  const info = asRecord(root?.info);
+  const paths: OpenApiDocument["paths"] = {};
+  let ordinal = 0;
 
+  const visit = (items: unknown[], group: string[]) => {
+    for (const item of items) {
+      const record = asRecord(item);
+      if (!record) continue;
+      const name = typeof record.name === "string" ? record.name : "PiAPI task";
+      const nextGroup = [...group, name];
+      if (Array.isArray(record.item)) {
+        visit(record.item, nextGroup);
+        continue;
+      }
+      const request = asRecord(record.request);
+      if (!request || String(request.method ?? "").toUpperCase() !== "POST") continue;
+      const rawUrl = postmanUrl(request.url);
+      if (!rawUrl.includes("/api/v1/task")) continue;
+      const body = asRecord(request.body);
+      if (body?.mode !== "raw" || typeof body.raw !== "string") continue;
+      let payload: unknown;
+      try {
+        payload = JSON.parse(body.raw);
+      } catch {
+        continue;
+      }
+      const payloadRecord = asRecord(payload);
+      const model = payloadRecord?.model;
+      const taskType = payloadRecord?.task_type;
+      if (typeof model !== "string" || typeof taskType !== "string") continue;
+      const input = asRecord(payloadRecord?.input) ?? {};
+      const description = nextGroup.join(" / ");
+      paths![`/api/v1/task#${ordinal++}`] = {
+        post: {
+          summary: description,
+          requestBody: {
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["model", "task_type", "input"],
+                  properties: {
+                    model: { type: "string", enum: [model] },
+                    task_type: { type: "string", enum: [taskType] },
+                    input: objectExampleSchema(input),
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+    }
+  };
+
+  visit(Array.isArray(root?.item) ? root.item : [], []);
+  return {
+    openapi: "3.0.0",
+    info: {
+      title: typeof info?.name === "string" ? info.name : "PiAPI Postman contract",
+      version: "postman",
+    },
+    paths,
+  };
+}
+
+function objectExampleSchema(value: Record<string, unknown>): JsonSchema {
+  const properties: Record<string, JsonSchema> = {};
+  for (const [name, child] of Object.entries(value)) properties[name] = exampleSchema(child);
+  return { type: "object", properties };
+}
+
+function exampleSchema(value: unknown): JsonSchema {
+  if (Array.isArray(value)) {
+    return { type: "array", items: value.length ? exampleSchema(value[0]) : { type: "unknown" } };
+  }
+  if (value === null) return { type: "null" };
+  if (typeof value === "object") return objectExampleSchema(value as Record<string, unknown>);
+  return { type: typeof value };
+}
+
+function postmanUrl(value: unknown): string {
+  if (typeof value === "string") return value;
+  const record = asRecord(value);
+  return typeof record?.raw === "string" ? record.raw : "";
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+/** Chooses GitHub by default; file is a deliberate offline override. */
+export function getFetcher(opts: FetcherOptions = {}): OpenApiFetcher {
+  const source = opts.source || process.env.PIAPI_SYNC_SOURCE || (opts.filePath ? "file" : "github");
   if (source === "file") {
     const path = opts.filePath || process.env.PIAPI_OPENAPI_FILE;
-    if (!path) {
-      throw new Error(
-        "file source selected but no path given (use --file <path> or PIAPI_OPENAPI_FILE)"
-      );
-    }
+    if (!path) throw new Error("file source selected but no path given (use --file <openapi.json>)");
     return new FileOpenApiFetcher(path);
   }
-
-  if (source === "apidog") {
-    const token = process.env.APIDOG_ACCESS_TOKEN;
-    const projectId = process.env.APIDOG_PROJECT_ID || "675356"; // PiAPI project
-    if (!token) {
-      throw new Error(
-        "apidog source needs APIDOG_ACCESS_TOKEN (a maintainer-privilege Apidog access token). " +
-          "Set it in .env, or use --file <exported-openapi.json> / PIAPI_SYNC_SOURCE=file for an offline run."
-      );
-    }
-    return new ApidogOpenApiFetcher(token, projectId);
+  if (source === "github") {
+    return new GitHubPostmanFetcher(
+      process.env.PIAPI_GITHUB_OWNER || DEFAULT_GITHUB_OWNER,
+      process.env.PIAPI_GITHUB_REPO || DEFAULT_GITHUB_REPO,
+      process.env.PIAPI_GITHUB_PATH || DEFAULT_GITHUB_PATH,
+      process.env.PIAPI_GITHUB_REF || DEFAULT_GITHUB_REF
+    );
   }
-
-  throw new Error(`Unknown sync source '${source}' (expected 'apidog' or 'file')`);
+  throw new Error(`Unknown sync source '${source}' (expected 'github' or 'file')`);
 }

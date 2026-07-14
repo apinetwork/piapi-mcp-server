@@ -1,72 +1,59 @@
-// Types shared across the PiAPI -> MCP sync task.
+// Types shared by the PiAPI -> MCP sync task.
 //
-// The sync task detects changes in the upstream PiAPI surface (source of truth:
-// the PiAPI Apidog project, exported as OpenAPI) and reports them so the MCP
-// tool definitions in src/index.ts can be kept up to date.
+// The source is a versioned PiAPI API contract in the PiAPI Manager GitHub
+// repository. Apidog is intentionally not part of this integration.
 
-/** A single input parameter of a PiAPI model/task_type, normalized from OpenAPI. */
+/** A single input parameter of a PiAPI model/task_type contract. */
 export interface CatalogParam {
   name: string;
-  type: string; // json-schema "type" (string/number/boolean/object/array/...) or "unknown"
+  type: string;
   required: boolean;
   enum?: (string | number)[];
   description?: string;
 }
 
-/**
- * One PiAPI "capability" == a (model, task_type) pair. This is the unit the MCP
- * tools wrap, so it is the unit we diff. Key is `${model}::${task_type}`.
- */
+/** One PiAPI capability, keyed by `${model}::${task_type}`. */
 export interface CatalogEntry {
   key: string;
   model: string;
   taskType: string;
   description?: string;
-  /** Price hint if the upstream doc exposes one (usually absent in OpenAPI). */
-  price?: string;
   params: CatalogParam[];
 }
 
-/** A normalized snapshot of the whole PiAPI task surface at a point in time. */
+/** A normalized snapshot of the PiAPI task surface. */
 export interface PiapiCatalog {
-  /** ISO timestamp of when this snapshot was produced. */
   generatedAt: string;
-  /** Where the snapshot came from (fetcher id + optional spec version/title). */
   source: string;
   entries: Record<string, CatalogEntry>;
 }
 
 export type ChangeKind =
-  | "added" // new (model, task_type) -> new MCP tool needed
-  | "removed" // (model, task_type) gone upstream -> deprecate MCP tool
-  | "params_changed" // param added/removed/type/enum/required changed
-  | "meta_changed"; // description and/or price changed
+  | "added"
+  | "removed"
+  | "params_changed"
+  | "meta_changed"; // description changed
 
 export interface CatalogChange {
   kind: ChangeKind;
   key: string;
   model: string;
   taskType: string;
-  /** Human-readable detail lines describing exactly what changed. */
   details: string[];
 }
 
 export interface DiffResult {
   changes: CatalogChange[];
-  /** convenience counters by kind */
   counts: Record<ChangeKind, number>;
   hasChanges: boolean;
 }
 
-/** A fetcher returns a raw OpenAPI (v3) document as a parsed object. */
 export interface OpenApiFetcher {
   id: string;
   fetch(): Promise<OpenApiDocument>;
 }
 
-// Minimal structural typing for the parts of OpenAPI 3.x we read. We keep this
-// loose on purpose: upstream tooling (Apidog) is the schema authority, and we
-// only need to walk paths/requestBody/schema.
+// Minimal structural typing for the OpenAPI shape the normalizer consumes.
 export interface OpenApiDocument {
   openapi?: string;
   info?: { title?: string; version?: string };
@@ -103,5 +90,6 @@ export interface JsonSchema {
   $ref?: string;
   default?: unknown;
   example?: unknown;
+  const?: unknown;
   [k: string]: unknown;
 }

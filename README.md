@@ -167,61 +167,49 @@ To disable the piapi server:
 
 ## Keeping tools in sync with PiAPI (sync task)
 
-The MCP tool definitions in `src/index.ts` hard-code PiAPI's models, `task_type`s
-and input parameters. When PiAPI changes its API (adds/deprecates a model,
-changes parameters, or changes a description/price) the tools can drift out of
-date. This repo ships a **periodic sync task** that detects that drift.
+The MCP tool definitions in `src/index.ts` hard-code PiAPI models, `task_type`s,
+and input parameters. This repository includes a repeatable **drift detector**
+that compares a committed catalog baseline with PiAPI Manager's versioned API
+contract. It detects **new APIs**, **deprecated APIs**, **parameter changes**,
+and **description changes**.
 
-**Source of truth:** the PiAPI Apidog project (id `675356`), exported as OpenAPI
-via the Apidog Open API. The task normalizes that spec into a catalog keyed by
-`(model, task_type)`, diffs it against a committed baseline
-(`src/sync/baseline.piapi-catalog.json`), and reports changes in four
-categories: **new APIs**, **deprecated APIs**, **parameter changes**, and
-**description/price changes**.
+**Source of truth:** the `Go API.postman_collection.json` contract in the PiAPI
+Manager GitHub repository (`Gocyber-world/midjourney-http-v2`). The task fetches
+that versioned contract directly from GitHub and extracts the
+`POST /api/v1/task` examples into `(model, task_type)` capabilities. If the
+Manager repository is private, set the CI secret `MCP_SYNC_GITHUB_TOKEN` with
+least-privilege `contents: read` on that source repository (and only the
+separate approved write permissions needed for MCP update automation). It has
+no Apidog dependency and deliberately does **not** inspect or report pricing.
 
-### Setup
-
-Provide an Apidog access token with maintainer privilege on the PiAPI project
-(in `.env` locally, or as the `APIDOG_ACCESS_TOKEN` repo secret for CI):
+### Commands
 
 ```bash
-APIDOG_ACCESS_TOKEN=your-apidog-token
-APIDOG_PROJECT_ID=675356
+npm run build          # compile the MCP server and sync task
+npm run test:sync      # offline sync-engine tests (no network or credentials)
+npm run sync           # fetch contract and diff baseline; exit 0 = in sync, 2 = drift
+npm run sync:snapshot  # print the normalized current contract catalog
+npm run sync:report    # write the Markdown drift report to sync-report.md
+npm run sync:accept    # after updating src/index.ts, refresh the baseline
 ```
 
-No token? You can run against a local OpenAPI export instead (e.g. exported from
-the Apidog UI):
+By default, `npm run sync` uses the Manager GitHub contract. For recovery or
+local development, an exported OpenAPI JSON file can be supplied instead:
 
 ```bash
 node dist/sync/cli.js diff --file ./piapi-openapi.json
 ```
 
-### Commands
-
-```bash
-npm run build          # compile (also compiles the sync task under dist/sync)
-npm run test:sync      # offline self-test of the diff engine (no token needed)
-npm run sync           # diff upstream vs baseline; exit 0 = in sync, 2 = drift
-npm run sync:snapshot  # print the normalized upstream catalog (JSON)
-npm run sync:report    # write the Markdown drift report to sync-report.md
-npm run sync:accept    # after updating src/index.ts, refresh the baseline
-```
-
-Typical loop when drift is reported: read the report → update the matching
-`server.addTool(...)` definition(s) in `src/index.ts` (model name, `task_type`,
-Zod parameter schema) → `npm run sync:accept` to record the new baseline →
-commit.
-
-> Note on prices: the Apidog OpenAPI export reliably covers new/deprecated APIs
-> and parameter changes. Per-model **price** is only detected when the upstream
-> doc text carries a price hint; if PiAPI keeps pricing on a separate page, wire
-> an additional price source into `src/sync/fetchers.ts`.
+When a drift report is produced: update the matching `server.addTool(...)`
+definition(s) in `src/index.ts`, validate the MCP server, then run
+`npm run sync:accept` and commit the code and refreshed baseline together.
 
 ### Automation
 
-`.github/workflows/sync-piapi.yml` runs the task weekly (and on demand). On drift
-it opens/updates a GitHub issue labelled `piapi-sync` with the report, so a
-maintainer can bring `src/index.ts` back in line.
+`.github/workflows/sync-piapi.yml` runs weekly and on demand. On drift it
+opens or updates an issue labelled `piapi-sync` with the report. It only detects
+and reports drift; code-changing automation must use the separately
+owner-approved, least-privilege MCP GitHub credential.
 
 ## Development
 
@@ -234,7 +222,7 @@ piapi-mcp-server/
 │   ├── index.ts        # Main server entry point
 │   └── sync/           # PiAPI -> MCP sync task
 │       ├── cli.ts          # CLI: snapshot / diff / accept / report-file
-│       ├── fetchers.ts     # Apidog Open API + local-file OpenAPI sources
+│       ├── fetchers.ts     # GitHub Postman contract + local-file sources
 │       ├── normalize.ts    # OpenAPI -> (model, task_type) catalog
 │       ├── diff.ts         # catalog diff + Markdown report
 │       ├── catalog.ts      # baseline load/save

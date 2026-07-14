@@ -1,9 +1,9 @@
 // Diffs two PiapiCatalog snapshots and classifies changes into the four
-// categories the task requires:
+// categories the task requires (pricing is intentionally out of scope):
 //   - added:          new (model, task_type)      -> new MCP tool needed
 //   - removed:        (model, task_type) gone      -> deprecate MCP tool
 //   - params_changed: input params/enum/required/type differ
-//   - meta_changed:   description and/or price differ
+//   - meta_changed:   description differs
 
 import type {
   CatalogChange,
@@ -112,11 +112,6 @@ function diffMeta(before: CatalogEntry, after: CatalogEntry): string[] {
       `  + after:  ${trunc(after.description)}`
     );
   }
-  if ((before.price ?? "") !== (after.price ?? "")) {
-    details.push(
-      `price changed: ${before.price ?? "(none)"} -> ${after.price ?? "(none)"}`
-    );
-  }
   return details;
 }
 
@@ -164,7 +159,7 @@ export function renderReport(diff: DiffResult, newCat: PiapiCatalog): string {
   lines.push(`- generated: ${newCat.generatedAt}`);
   lines.push(
     `- summary: ${diff.counts.added} added · ${diff.counts.removed} removed · ` +
-      `${diff.counts.params_changed} param-changed · ${diff.counts.meta_changed} desc/price-changed`
+      `${diff.counts.params_changed} param-changed · ${diff.counts.meta_changed} description-changed`
   );
   lines.push("");
 
@@ -177,7 +172,7 @@ export function renderReport(diff: DiffResult, newCat: PiapiCatalog): string {
     ["added", "🟢 New APIs (add MCP tools)"],
     ["removed", "🔴 Deprecated APIs (remove/mark MCP tools)"],
     ["params_changed", "🟡 Parameter changes (update tool schemas)"],
-    ["meta_changed", "🔵 Description / price changes"],
+    ["meta_changed", "🔵 Description changes"],
   ];
   for (const [kind, title] of sections) {
     const items = diff.changes.filter((c) => c.kind === kind);

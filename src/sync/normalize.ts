@@ -4,7 +4,7 @@
 //   { model: string, task_type: string, input: { ...params } }
 // so the diff unit is the (model, task_type) pair and its `input` params.
 //
-// Upstream (Apidog-exported) specs vary: some encode model/task_type as enums
+// Upstream contract exports vary: some encode model/task_type as enums
 // or `const`, some split each model into its own path/operation, some inline
 // the request schema and some $ref it. This normalizer is defensive: it walks
 // every POST operation, resolves local $refs, and extracts whatever
@@ -30,7 +30,7 @@ export function normalize(doc: OpenApiDocument, sourceId: string): PiapiCatalog 
       if (method.toLowerCase() !== "post" || !op) continue;
       for (const entry of extractEntries(path, op as OpenApiOperation, resolve)) {
         // Merge: if two operations describe the same (model, task_type),
-        // union their params (first description/price wins).
+        // union their params (first description wins).
         const existing = entries[entry.key];
         if (existing) {
           entries[entry.key] = mergeEntries(existing, entry);
@@ -84,14 +84,12 @@ function extractEntries(
       );
 
   const description = op.summary || op.description || undefined;
-  const price = extractPriceHint(op.description) ?? extractPriceHint(description);
-
   const out: CatalogEntry[] = [];
   for (const model of modelList) {
     for (const taskType of taskTypeList) {
       if (!model && !taskType) continue;
       const key = `${model}::${taskType}`;
-      out.push({ key, model, taskType, description, price, params });
+      out.push({ key, model, taskType, description, params });
     }
   }
   return out;
@@ -114,7 +112,7 @@ function literalValues(s: JsonSchema | undefined): string[] {
   if (!s) return [];
   const vals: (string | number)[] = [];
   if (Array.isArray(s.enum)) vals.push(...s.enum);
-  // OpenAPI 3.1 `const`, plus Apidog's habit of putting a fixed example.
+  // OpenAPI 3.1 `const`, plus contract exports that put a fixed example.
   if (s.const !== undefined) vals.push(s.const as string | number);
   if (!vals.length && typeof s.default === "string") vals.push(s.default);
   if (!vals.length && typeof s.example === "string") vals.push(s.example);
@@ -187,7 +185,6 @@ function mergeEntries(a: CatalogEntry, b: CatalogEntry): CatalogEntry {
   return {
     ...a,
     description: a.description ?? b.description,
-    price: a.price ?? b.price,
     params,
   };
 }
@@ -228,17 +225,4 @@ function slug(s: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
-}
-
-/**
- * Best-effort price extraction from a description string. PiAPI OpenAPI usually
- * does NOT carry price, so this is opportunistic: it catches "$0.15 / second",
- * "0.3 credits", "X credits per call" style hints when present in the doc text.
- */
-export function extractPriceHint(text?: string): string | undefined {
-  if (!text) return undefined;
-  const m = text.match(
-    /(\$?\d+(?:\.\d+)?\s*(?:credits?|tokens?|usd|\/\s*(?:second|s|call|image|video|generation)))/i
-  );
-  return m ? m[1].replace(/\s+/g, " ").trim() : undefined;
 }

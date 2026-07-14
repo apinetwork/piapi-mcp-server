@@ -1,18 +1,14 @@
 name: Sync PiAPI API surface
 
-# Periodic/repeatable task that detects upstream PiAPI API changes (new /
-# deprecated APIs, parameter changes, description/price changes) and files an
-# issue so the MCP tool definitions in src/index.ts can be updated to match.
-#
-# Source of truth: the PiAPI Apidog project (id 675356), exported as OpenAPI via
-# the Apidog Open API. Requires repo secret APIDOG_ACCESS_TOKEN (a maintainer-
-# privilege Apidog access token). Without it the job fails fast with guidance;
-# maintainers can also run `npm run sync` locally against a --file export.
+# Periodically detects drift between the versioned PiAPI Manager API contract
+# and MCP's committed baseline. It intentionally has no Apidog dependency and
+# does not inspect prices. A separate owner-managed MCP token may later be used
+# by an approved update workflow; this detector only files a drift issue.
 
 on:
   schedule:
-    - cron: "0 6 * * 1" # every Monday 06:00 UTC
-  workflow_dispatch: {} # allow manual runs
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -23,27 +19,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
-
       - name: Install
         run: npm ci || npm install
-
       - name: Build
         run: npm run build
-
       - name: Self-test sync engine
         run: npm run test:sync
-
-      - name: Diff upstream vs committed baseline
+      - name: Diff PiAPI contract vs committed baseline
         id: diff
         env:
-          APIDOG_ACCESS_TOKEN: ${{ secrets.APIDOG_ACCESS_TOKEN }}
-          APIDOG_PROJECT_ID: "675356"
-          PIAPI_SYNC_SOURCE: apidog
+          PIAPI_SYNC_SOURCE: github
+          PIAPI_CONTRACT_GITHUB_TOKEN: ${{ secrets.MCP_SYNC_GITHUB_TOKEN }}
         run: |
           set +e
           node dist/sync/cli.js report-file sync-report.md
@@ -51,10 +41,8 @@ jobs:
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           echo "----- report -----"
           cat sync-report.md
-          # exit 0 = in sync, 2 = drift, 1 = error. Only 1 fails the job.
           if [ "$code" = "1" ]; then exit 1; fi
           exit 0
-
       - name: Open/update drift issue
         if: steps.diff.outputs.exit_code == '2'
         uses: actions/github-script@v7
@@ -64,28 +52,13 @@ jobs:
             const body = fs.readFileSync('sync-report.md', 'utf8');
             const title = 'PiAPI → MCP drift detected';
             const { data: issues } = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              labels: 'piapi-sync',
+              owner: context.repo.owner, repo: context.repo.repo, state: 'open', labels: 'piapi-sync',
             });
             if (issues.length) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issues[0].number,
-                body,
-              });
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issues[0].number, body });
             } else {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title,
-                body,
-                labels: ['piapi-sync'],
-              });
+              await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title, body, labels: ['piapi-sync'] });
             }
-
       - name: Upload report artifact
         if: always()
         uses: actions/upload-artifact@v4
