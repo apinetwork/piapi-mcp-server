@@ -6,8 +6,12 @@ name: Sync PiAPI API surface
 # by an approved update workflow; this detector only files a drift issue.
 
 on:
-  schedule:
-    - cron: "0 6 * * 1"
+  # Scheduled auto-run intentionally disabled. The active PiAPI->MCP sync runs
+  # from the repo owner's LOCAL scheduler, which reads the Manager contract from
+  # a local checkout and needs no CI secret. This CI detector requires
+  # secrets.MCP_SYNC_GITHUB_TOKEN with contents:read on the PRIVATE Manager repo;
+  # re-enable the weekly `schedule` cron only after that secret is configured,
+  # otherwise every scheduled run fails on a 404 fetching the private contract.
   workflow_dispatch: {}
 
 permissions:
