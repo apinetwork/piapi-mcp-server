@@ -235,6 +235,7 @@ piapi-mcp-server/
 │       ├── normalize.ts    # OpenAPI -> (model, task_type) catalog
 │       ├── diff.ts         # catalog diff + Markdown report
 │       ├── catalog.ts      # baseline load/save
+│       ├── mcp_tools.ts    # catalog -> contract-backed FastMCP tool schemas
 │       ├── selftest.ts     # offline engine test (npm run test:sync)
 │       ├── types.ts
 │       └── baseline.piapi-catalog.json  # committed baseline
