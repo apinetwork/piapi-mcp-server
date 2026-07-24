@@ -1,5 +1,3010 @@
 {
-  "generatedAt": "1970-01-01T00:00:00.000Z",
-  "source": "empty (bootstrap)",
-  "entries": {}
+  "generatedAt": "2026-07-24T08:34:54.616Z",
+  "source": "file · Go API vpostman",
+  "entries": {
+    "Qubico/flux1-schnell::txt2img": {
+      "key": "Qubico/flux1-schnell::txt2img",
+      "model": "Qubico/flux1-schnell",
+      "taskType": "txt2img",
+      "description": "Unified / flux1 / flux1-schnell-txt2img",
+      "params": [
+        {
+          "name": "guidance_scale",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/flux1-schnell::txt2img-sr": {
+      "key": "Qubico/flux1-schnell::txt2img-sr",
+      "model": "Qubico/flux1-schnell",
+      "taskType": "txt2img-sr",
+      "description": "Unified / flux1 / flux1-schnell-txt2img-sr",
+      "params": [
+        {
+          "name": "height",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "scale",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/flux1-dev::txt2img": {
+      "key": "Qubico/flux1-dev::txt2img",
+      "model": "Qubico/flux1-dev",
+      "taskType": "txt2img",
+      "description": "Unified / flux1 / flux1-dev-txt2img",
+      "params": [
+        {
+          "name": "height",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/flux1-dev::img2img": {
+      "key": "Qubico/flux1-dev::img2img",
+      "model": "Qubico/flux1-dev",
+      "taskType": "img2img",
+      "description": "Unified / flux1 / flux1-dev-img2img",
+      "params": [
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/flux1-dev-advanced::txt2img-sr": {
+      "key": "Qubico/flux1-dev-advanced::txt2img-sr",
+      "model": "Qubico/flux1-dev-advanced",
+      "taskType": "txt2img-sr",
+      "description": "Unified / flux1 / flux1-dev-txt2img-sr",
+      "params": [
+        {
+          "name": "height",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "scale",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/flux1-dev-advanced::img2img-sr": {
+      "key": "Qubico/flux1-dev-advanced::img2img-sr",
+      "model": "Qubico/flux1-dev-advanced",
+      "taskType": "img2img-sr",
+      "description": "Unified / flux1 / flux1-dev-img2img-sr",
+      "params": [
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "scale",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/flux1-dev-advanced::txt2img-lora": {
+      "key": "Qubico/flux1-dev-advanced::txt2img-lora",
+      "model": "Qubico/flux1-dev-advanced",
+      "taskType": "txt2img-lora",
+      "description": "Unified / flux1 / flux1-dev-txt2img-lora",
+      "params": [
+        {
+          "name": "lora_settings",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/flux1-dev-advanced::img2img-lora": {
+      "key": "Qubico/flux1-dev-advanced::img2img-lora",
+      "model": "Qubico/flux1-dev-advanced",
+      "taskType": "img2img-lora",
+      "description": "Unified / flux1 / flux1-dev-img2img-lora",
+      "params": [
+        {
+          "name": "denoise",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "lora_settings",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/flux1-dev-advanced::fill-inpaint": {
+      "key": "Qubico/flux1-dev-advanced::fill-inpaint",
+      "model": "Qubico/flux1-dev-advanced",
+      "taskType": "fill-inpaint",
+      "description": "Unified / flux1 / flux1-fill-inpaint",
+      "params": [
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/flux1-dev-advanced::fill-outpaint": {
+      "key": "Qubico/flux1-dev-advanced::fill-outpaint",
+      "model": "Qubico/flux1-dev-advanced",
+      "taskType": "fill-outpaint",
+      "description": "Unified / flux1 / flux1-fill-outpaint",
+      "params": [
+        {
+          "name": "custom_settings",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/flux1-dev-advanced::redux-variation": {
+      "key": "Qubico/flux1-dev-advanced::redux-variation",
+      "model": "Qubico/flux1-dev-advanced",
+      "taskType": "redux-variation",
+      "description": "Unified / flux1 / flux1-redux-variation",
+      "params": [
+        {
+          "name": "height",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/flux1-dev-advanced::controlnet-lora": {
+      "key": "Qubico/flux1-dev-advanced::controlnet-lora",
+      "model": "Qubico/flux1-dev-advanced",
+      "taskType": "controlnet-lora",
+      "description": "Unified / flux1 / flux1-controlnet-lora",
+      "params": [
+        {
+          "name": "control_net_settings",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "lora_settings",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "return_preprocessed_image",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/flux1-dev-advanced::kontext": {
+      "key": "Qubico/flux1-dev-advanced::kontext",
+      "model": "Qubico/flux1-dev-advanced",
+      "taskType": "kontext",
+      "description": "Unified / flux1 / flux1-kontext",
+      "params": [
+        {
+          "name": "height",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/image-toolkit::face-swap": {
+      "key": "Qubico/image-toolkit::face-swap",
+      "model": "Qubico/image-toolkit",
+      "taskType": "face-swap",
+      "description": "Unified / image toolkit / face swap",
+      "params": [
+        {
+          "name": "swap_image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "target_image",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/image-toolkit::multi-face-swap": {
+      "key": "Qubico/image-toolkit::multi-face-swap",
+      "model": "Qubico/image-toolkit",
+      "taskType": "multi-face-swap",
+      "description": "Unified / image toolkit / multi face swap",
+      "params": [
+        {
+          "name": "input_faces_index",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "source_faces_index",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "swap_image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "target_image",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/image-toolkit::background-remove": {
+      "key": "Qubico/image-toolkit::background-remove",
+      "model": "Qubico/image-toolkit",
+      "taskType": "background-remove",
+      "description": "Unified / image toolkit / background remove",
+      "params": [
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "rmbg_model",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/image-toolkit::segment": {
+      "key": "Qubico/image-toolkit::segment",
+      "model": "Qubico/image-toolkit",
+      "taskType": "segment",
+      "description": "Unified / image toolkit / segment",
+      "params": [
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "segment_factor",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/image-toolkit::upscale": {
+      "key": "Qubico/image-toolkit::upscale",
+      "model": "Qubico/image-toolkit",
+      "taskType": "upscale",
+      "description": "Unified / image toolkit / upscale",
+      "params": [
+        {
+          "name": "face_enhance",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "scale",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/video-toolkit::face-swap": {
+      "key": "Qubico/video-toolkit::face-swap",
+      "model": "Qubico/video-toolkit",
+      "taskType": "face-swap",
+      "description": "Unified / video toolkit / face swap",
+      "params": [
+        {
+          "name": "config",
+          "type": "object",
+          "required": false
+        },
+        {
+          "name": "swap_faces_index",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "swap_image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "target_faces_index",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "target_video",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/video-toolkit::upscale": {
+      "key": "Qubico/video-toolkit::upscale",
+      "model": "Qubico/video-toolkit",
+      "taskType": "upscale",
+      "description": "Unified / video toolkit / upscale",
+      "params": [
+        {
+          "name": "scale",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "video",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/video-toolkit::background-remove": {
+      "key": "Qubico/video-toolkit::background-remove",
+      "model": "Qubico/video-toolkit",
+      "taskType": "background-remove",
+      "description": "Unified / video toolkit / background remove",
+      "params": [
+        {
+          "name": "invert_output",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "video",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "kling::omni_video_generation": {
+      "key": "kling::omni_video_generation",
+      "model": "kling",
+      "taskType": "omni_video_generation",
+      "description": "Unified / kling / omni / 文生视频",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "enable_audio",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "images",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "keep_original_audio",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "multi_shots",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "video",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/hug-video::image_to_video": {
+      "key": "Qubico/hug-video::image_to_video",
+      "model": "Qubico/hug-video",
+      "taskType": "image_to_video",
+      "description": "Unified / kling / old / hug video",
+      "params": [
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "kling::video_generation": {
+      "key": "kling::video_generation",
+      "model": "kling",
+      "taskType": "video_generation",
+      "description": "Unified / kling / old / PPU 文生视频",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "camera_control",
+          "type": "object",
+          "required": false
+        },
+        {
+          "name": "cfg_scale",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "elements",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "enable_audio",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "image_tail_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "images",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "mode",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "motion_brush",
+          "type": "object",
+          "required": false
+        },
+        {
+          "name": "multi_shots",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prefer_multi_shots",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "kling::lip_sync": {
+      "key": "kling::lip_sync",
+      "model": "kling",
+      "taskType": "lip_sync",
+      "description": "Unified / kling / old / LipSync tts",
+      "params": [
+        {
+          "name": "local_dubbing_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "origin_task_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "tts_speed",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "tts_text",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "tts_timbre",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "video_url",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "kling::ai_try_on": {
+      "key": "kling::ai_try_on",
+      "model": "kling",
+      "taskType": "ai_try_on",
+      "description": "Unified / kling / old / AITryOn",
+      "params": [
+        {
+          "name": "batch_size",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "dress_input",
+          "type": "null",
+          "required": false
+        },
+        {
+          "name": "lower_input",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "model_input",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "upper_input",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "kling::extend_video": {
+      "key": "kling::extend_video",
+      "model": "kling",
+      "taskType": "extend_video",
+      "description": "Unified / kling / old / PPU 视频扩展",
+      "params": [
+        {
+          "name": "origin_task_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "kling::effects": {
+      "key": "kling::effects",
+      "model": "kling",
+      "taskType": "effects",
+      "description": "Unified / kling / old / 图片生成视频 effects",
+      "params": [
+        {
+          "name": "effect",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "professional_mode",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "kling::sound": {
+      "key": "kling::sound",
+      "model": "kling",
+      "taskType": "sound",
+      "description": "Unified / kling / old / sound文生音频",
+      "params": [
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "origin_task_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "kling::avatar": {
+      "key": "kling::avatar",
+      "model": "kling",
+      "taskType": "avatar",
+      "description": "Unified / kling / old / avatar",
+      "params": [
+        {
+          "name": "batch_size",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "local_dubbing_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "mode",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "kling::motion_control": {
+      "key": "kling::motion_control",
+      "model": "kling",
+      "taskType": "motion_control",
+      "description": "Unified / kling / old / motion control",
+      "params": [
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "keep_original_sound",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "mode",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "motion_direction",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "preset_motion",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "suno::generate_lyrics": {
+      "key": "suno::generate_lyrics",
+      "model": "suno",
+      "taskType": "generate_lyrics",
+      "description": "Unified / suno / 生成歌词",
+      "params": [
+        {
+          "name": "model_version",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "music-s::generate_lyrics": {
+      "key": "music-s::generate_lyrics",
+      "model": "music-s",
+      "taskType": "generate_lyrics",
+      "description": "Unified / suno / 生成歌词 MusicS",
+      "params": [
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "suno::generate_music": {
+      "key": "suno::generate_music",
+      "model": "suno",
+      "taskType": "generate_music",
+      "description": "Unified / suno / 生成音乐(Description)",
+      "params": [
+        {
+          "name": "gpt_description_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "make_instrumental",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "model_version",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "music-s::generate_music": {
+      "key": "music-s::generate_music",
+      "model": "music-s",
+      "taskType": "generate_music",
+      "description": "Unified / suno / 生成音乐(Description) ModelS",
+      "params": [
+        {
+          "name": "gpt_description_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "make_instrumental",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    "suno::generate_music_custom": {
+      "key": "suno::generate_music_custom",
+      "model": "suno",
+      "taskType": "generate_music_custom",
+      "description": "Unified / suno / 生成音乐(Custom)",
+      "params": [
+        {
+          "name": "continue_at",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "continue_clip_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "model_version",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_tags",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "tags",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "music-s::generate_music_custom": {
+      "key": "music-s::generate_music_custom",
+      "model": "music-s",
+      "taskType": "generate_music_custom",
+      "description": "Unified / suno / 生成音乐(Custom) MusicS",
+      "params": [
+        {
+          "name": "continue_at",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "continue_clip_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "model_version",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_tags",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "tags",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "suno::concat_music": {
+      "key": "suno::concat_music",
+      "model": "suno",
+      "taskType": "concat_music",
+      "description": "Unified / suno / Clip合并(输入extend结果中的clipId）",
+      "params": [
+        {
+          "name": "clip_id",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "music-s::concat_music": {
+      "key": "music-s::concat_music",
+      "model": "music-s",
+      "taskType": "concat_music",
+      "description": "Unified / suno / Clip合并 MusicS",
+      "params": [
+        {
+          "name": "clip_id",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "suno::upload_audio": {
+      "key": "suno::upload_audio",
+      "model": "suno",
+      "taskType": "upload_audio",
+      "description": "Unified / suno / 音频上传",
+      "params": [
+        {
+          "name": "audio_url",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "music-s::upload_audio": {
+      "key": "music-s::upload_audio",
+      "model": "music-s",
+      "taskType": "upload_audio",
+      "description": "Unified / suno / 音频上传 MusicS",
+      "params": [
+        {
+          "name": "audio_url",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "luma::video_generation": {
+      "key": "luma::video_generation",
+      "model": "luma",
+      "taskType": "video_generation",
+      "description": "Unified / luma / 文字生成视频",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "end_image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "loop",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "start_image",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "luma::extend_video": {
+      "key": "luma::extend_video",
+      "model": "luma",
+      "taskType": "extend_video",
+      "description": "Unified / luma / 视频扩展",
+      "params": [
+        {
+          "name": "key_frames",
+          "type": "object",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "midjourney::imagine": {
+      "key": "midjourney::imagine",
+      "model": "midjourney",
+      "taskType": "imagine",
+      "description": "Unified / mj / imagine",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "process_mode",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "midjourney::upscale": {
+      "key": "midjourney::upscale",
+      "model": "midjourney",
+      "taskType": "upscale",
+      "description": "Unified / mj / upscale",
+      "params": [
+        {
+          "name": "index",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "origin_task_id",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "midjourney::variation": {
+      "key": "midjourney::variation",
+      "model": "midjourney",
+      "taskType": "variation",
+      "description": "Unified / mj / variation",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "index",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "origin_task_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "skip_prompt_check",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    "midjourney::reroll": {
+      "key": "midjourney::reroll",
+      "model": "midjourney",
+      "taskType": "reroll",
+      "description": "Unified / mj / reroll",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "origin_task_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "skip_prompt_check",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    "midjourney::describe": {
+      "key": "midjourney::describe",
+      "model": "midjourney",
+      "taskType": "describe",
+      "description": "Unified / mj / describe",
+      "params": [
+        {
+          "name": "bot_id",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "process_mode",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "midjourney::seed": {
+      "key": "midjourney::seed",
+      "model": "midjourney",
+      "taskType": "seed",
+      "description": "Unified / mj / seed",
+      "params": [
+        {
+          "name": "origin_task_id",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "midjourney::blend": {
+      "key": "midjourney::blend",
+      "model": "midjourney",
+      "taskType": "blend",
+      "description": "Unified / mj / blend",
+      "params": [
+        {
+          "name": "bot_id",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "dimension",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "image_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "process_mode",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "midjourney::inpaint": {
+      "key": "midjourney::inpaint",
+      "model": "midjourney",
+      "taskType": "inpaint",
+      "description": "Unified / mj / inpaint",
+      "params": [
+        {
+          "name": "mask",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "origin_task_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "skip_prompt_check",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    "midjourney::outpaint": {
+      "key": "midjourney::outpaint",
+      "model": "midjourney",
+      "taskType": "outpaint",
+      "description": "Unified / mj / outpaint",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "origin_task_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "skip_prompt_check",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "zoom_ratio",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "midjourney::pan": {
+      "key": "midjourney::pan",
+      "model": "midjourney",
+      "taskType": "pan",
+      "description": "Unified / mj / pan",
+      "params": [
+        {
+          "name": "direction",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "origin_task_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "skip_prompt_check",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    "music-u::generate_music": {
+      "key": "music-u::generate_music",
+      "model": "music-u",
+      "taskType": "generate_music",
+      "description": "Unified / Udio / MusicGeneration",
+      "params": [
+        {
+          "name": "continue_at",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "continue_song_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "gpt_description_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "lyrics",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "lyrics_type",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_tags",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "music-u::generate_lyrics": {
+      "key": "music-u::generate_lyrics",
+      "model": "music-u",
+      "taskType": "generate_lyrics",
+      "description": "Unified / Udio / LyricsGeneration",
+      "params": [
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "hailuo::video_generation": {
+      "key": "hailuo::video_generation",
+      "model": "hailuo",
+      "taskType": "video_generation",
+      "description": "Unified / hailuo / 文生视频",
+      "params": [
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "expand_prompt",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/trellis::text-to-3d": {
+      "key": "Qubico/trellis::text-to-3d",
+      "model": "Qubico/trellis",
+      "taskType": "text-to-3d",
+      "description": "Unified / trellis / trellis t2m",
+      "params": [
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "slat_guidance_strength",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "slat_sampling_steps",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "ss_guidance_strength",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "ss_sampling_steps",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/trellis::image-to-3d": {
+      "key": "Qubico/trellis::image-to-3d",
+      "model": "Qubico/trellis",
+      "taskType": "image-to-3d",
+      "description": "Unified / trellis / trellis i2m",
+      "params": [
+        {
+          "name": "images",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "slat_guidance_strength",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "slat_sampling_steps",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "ss_guidance_strength",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "ss_sampling_steps",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/trellis2::image-to-3d": {
+      "key": "Qubico/trellis2::image-to-3d",
+      "model": "Qubico/trellis2",
+      "taskType": "image-to-3d",
+      "description": "Unified / trellis / trellis2 i2m",
+      "params": [
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/hunyuan::txt2video": {
+      "key": "Qubico/hunyuan::txt2video",
+      "model": "Qubico/hunyuan",
+      "taskType": "txt2video",
+      "description": "Unified / hunyuan / txt2vid",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/hunyuan::txt2video-lora": {
+      "key": "Qubico/hunyuan::txt2video-lora",
+      "model": "Qubico/hunyuan",
+      "taskType": "txt2video-lora",
+      "description": "Unified / hunyuan / txt2vid lora",
+      "params": [
+        {
+          "name": "lora_settings",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/hunyuan::fast-txt2video": {
+      "key": "Qubico/hunyuan::fast-txt2video",
+      "model": "Qubico/hunyuan",
+      "taskType": "fast-txt2video",
+      "description": "Unified / hunyuan / fast txt2vid",
+      "params": [
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/hunyuan::img2video-concat": {
+      "key": "Qubico/hunyuan::img2video-concat",
+      "model": "Qubico/hunyuan",
+      "taskType": "img2video-concat",
+      "description": "Unified / hunyuan / img2vid concat",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/hunyuan::img2video-replace": {
+      "key": "Qubico/hunyuan::img2video-replace",
+      "model": "Qubico/hunyuan",
+      "taskType": "img2video-replace",
+      "description": "Unified / hunyuan / img2vid replace",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/skyreels::img2video": {
+      "key": "Qubico/skyreels::img2video",
+      "model": "Qubico/skyreels",
+      "taskType": "img2video",
+      "description": "Unified / skyreels / img2vid",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "guidance_scale",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/framepack::img2video": {
+      "key": "Qubico/framepack::img2video",
+      "model": "Qubico/framepack",
+      "taskType": "img2video",
+      "description": "Unified / framepack / img2vid",
+      "params": [
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "end_image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "start_image",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/wanx::txt2video-1.3b": {
+      "key": "Qubico/wanx::txt2video-1.3b",
+      "model": "Qubico/wanx",
+      "taskType": "txt2video-1.3b",
+      "description": "Unified / wan / wan2.1 / txt2vid 1.3b",
+      "params": [
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/wanx::txt2video-14b": {
+      "key": "Qubico/wanx::txt2video-14b",
+      "model": "Qubico/wanx",
+      "taskType": "txt2video-14b",
+      "description": "Unified / wan / wan2.1 / txt2vid 14b",
+      "params": [
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/wanx::txt2video-14b-lora": {
+      "key": "Qubico/wanx::txt2video-14b-lora",
+      "model": "Qubico/wanx",
+      "taskType": "txt2video-14b-lora",
+      "description": "Unified / wan / wan2.1 / txt2vid 14b lora",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "lora_settings",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/wanx::img2video-14b": {
+      "key": "Qubico/wanx::img2video-14b",
+      "model": "Qubico/wanx",
+      "taskType": "img2video-14b",
+      "description": "Unified / wan / wan2.1 / img2vid 14b",
+      "params": [
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/wanx::img2video-14b-lora": {
+      "key": "Qubico/wanx::img2video-14b-lora",
+      "model": "Qubico/wanx",
+      "taskType": "img2video-14b-lora",
+      "description": "Unified / wan / wan2.1 / img2vid 14b lora",
+      "params": [
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "lora_settings",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/wanx::img2video-14b-keyframe": {
+      "key": "Qubico/wanx::img2video-14b-keyframe",
+      "model": "Qubico/wanx",
+      "taskType": "img2video-14b-keyframe",
+      "description": "Unified / wan / wan2.1 / img2vid 14b keyframe",
+      "params": [
+        {
+          "name": "end_image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "start_image",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/wanx::img2video-14b-control-camera": {
+      "key": "Qubico/wanx::img2video-14b-control-camera",
+      "model": "Qubico/wanx",
+      "taskType": "img2video-14b-control-camera",
+      "description": "Unified / wan / wan2.1 / img2vid 14b control camera",
+      "params": [
+        {
+          "name": "control_camera_settings",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/wanx::wan22-txt2video-14b": {
+      "key": "Qubico/wanx::wan22-txt2video-14b",
+      "model": "Qubico/wanx",
+      "taskType": "wan22-txt2video-14b",
+      "description": "Unified / wan / wan2.2 / txt2vid 14b",
+      "params": [
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/wanx::wan22-img2video-14b": {
+      "key": "Qubico/wanx::wan22-img2video-14b",
+      "model": "Qubico/wanx",
+      "taskType": "wan22-img2video-14b",
+      "description": "Unified / wan / wan2.2 / img2vid 14b",
+      "params": [
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Wan::wan26-txt2video": {
+      "key": "Wan::wan26-txt2video",
+      "model": "Wan",
+      "taskType": "wan26-txt2video",
+      "description": "Unified / wan / official wan2.6 / txt2vid",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "audio",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "audio_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt_extend",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "shot_type",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "watermark",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    "Wan::wan26-img2video": {
+      "key": "Wan::wan26-img2video",
+      "model": "Wan",
+      "taskType": "wan26-img2video",
+      "description": "Unified / wan / official wan2.6 / img2vid",
+      "params": [
+        {
+          "name": "audio",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt_extend",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "shot_type",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "watermark",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/tts::zero-shot": {
+      "key": "Qubico/tts::zero-shot",
+      "model": "Qubico/tts",
+      "taskType": "zero-shot",
+      "description": "Unified / tts / zero-shot",
+      "params": [
+        {
+          "name": "custom_split_words",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "gen_text",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "ref_audio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "ref_text",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "remove_silence",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "speed",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/mmaudio::video2audio": {
+      "key": "Qubico/mmaudio::video2audio",
+      "model": "Qubico/mmaudio",
+      "taskType": "video2audio",
+      "description": "Unified / mmaudio / vid2aud",
+      "params": [
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "video",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/diffrhythm::txt2audio-base": {
+      "key": "Qubico/diffrhythm::txt2audio-base",
+      "model": "Qubico/diffrhythm",
+      "taskType": "txt2audio-base",
+      "description": "Unified / diffrhythm / base",
+      "params": [
+        {
+          "name": "lyrics",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "style_audio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "style_prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/diffrhythm::txt2audio-full": {
+      "key": "Qubico/diffrhythm::txt2audio-full",
+      "model": "Qubico/diffrhythm",
+      "taskType": "txt2audio-full",
+      "description": "Unified / diffrhythm / full",
+      "params": [
+        {
+          "name": "lyrics",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "style_audio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "style_prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/ace-step::txt2audio": {
+      "key": "Qubico/ace-step::txt2audio",
+      "model": "Qubico/ace-step",
+      "taskType": "txt2audio",
+      "description": "Unified / ace step / txt2audio",
+      "params": [
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "lyrics",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "style_audio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "style_prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/ace-step::audio2audio": {
+      "key": "Qubico/ace-step::audio2audio",
+      "model": "Qubico/ace-step",
+      "taskType": "audio2audio",
+      "description": "Unified / ace step / audio2audio",
+      "params": [
+        {
+          "name": "lyrics",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "style_audio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "style_prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/ace-step::edit": {
+      "key": "Qubico/ace-step::edit",
+      "model": "Qubico/ace-step",
+      "taskType": "edit",
+      "description": "Unified / ace step / audio edit",
+      "params": [
+        {
+          "name": "audio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "edit_lyrics",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "edit_style_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "lyrics",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "style_prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/ace-step::extend": {
+      "key": "Qubico/ace-step::extend",
+      "model": "Qubico/ace-step",
+      "taskType": "extend",
+      "description": "Unified / ace step / audio extend",
+      "params": [
+        {
+          "name": "audio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "left_extend_duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "lyrics",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "right_extend_duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "style_prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/joycaption::joycaption-beta-one": {
+      "key": "Qubico/joycaption::joycaption-beta-one",
+      "model": "Qubico/joycaption",
+      "taskType": "joycaption-beta-one",
+      "description": "Unified / joycaption / beta one",
+      "params": [
+        {
+          "name": "caption_length",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "image",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt_style",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "workflow_type",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "gemini::gemini-2.5-flash-image": {
+      "key": "gemini::gemini-2.5-flash-image",
+      "model": "gemini",
+      "taskType": "gemini-2.5-flash-image",
+      "description": "Unified / internal proxy / gemini / txt2img",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "image_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "num_images",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "output_format",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "gemini::nano-banana-pro": {
+      "key": "gemini::nano-banana-pro",
+      "model": "gemini",
+      "taskType": "nano-banana-pro",
+      "description": "Unified / internal proxy / gemini / nano banana pro",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "output_format",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "safety_level",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "veo3::veo3-video": {
+      "key": "veo3::veo3-video",
+      "model": "veo3",
+      "taskType": "veo3-video",
+      "description": "Unified / internal proxy / veo3 / txt2vid",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "generate_audio",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "veo3::veo3-video-fast": {
+      "key": "veo3::veo3-video-fast",
+      "model": "veo3",
+      "taskType": "veo3-video-fast",
+      "description": "Unified / internal proxy / veo3 / fast-txt2vid",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "generate_audio",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "veo3.1::veo3.1-video": {
+      "key": "veo3.1::veo3.1-video",
+      "model": "veo3.1",
+      "taskType": "veo3.1-video",
+      "description": "Unified / internal proxy / veo3.1 / txt2vid",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "generate_audio",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "reference_image_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "tail_image_url",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "veo3.1::veo3.1-video-fast": {
+      "key": "veo3.1::veo3.1-video-fast",
+      "model": "veo3.1",
+      "taskType": "veo3.1-video-fast",
+      "description": "Unified / internal proxy / veo3.1 / fast-txt2vid",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "generate_audio",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "tail_image_url",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "sora2::sora2-video": {
+      "key": "sora2::sora2-video",
+      "model": "sora2",
+      "taskType": "sora2-video",
+      "description": "Unified / internal proxy / sora2 / txt2vid",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "sora2::sora2-pro-video": {
+      "key": "sora2::sora2-pro-video",
+      "model": "sora2",
+      "taskType": "sora2-pro-video",
+      "description": "Unified / internal proxy / sora2 / sora2 pro",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "sora2::remove-watermark": {
+      "key": "sora2::remove-watermark",
+      "model": "sora2",
+      "taskType": "remove-watermark",
+      "description": "Unified / internal proxy / sora2 / sora2 rmwm",
+      "params": [
+        {
+          "name": "video_url",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "suno::music": {
+      "key": "suno::music",
+      "model": "suno",
+      "taskType": "music",
+      "description": "Unified / internal proxy / suno / music",
+      "params": [
+        {
+          "name": "gpt_description_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "make_instrumental",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "mv",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "tags",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "task_id",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "suno::lyrics": {
+      "key": "suno::lyrics",
+      "model": "suno",
+      "taskType": "lyrics",
+      "description": "Unified / internal proxy / suno / lyrics",
+      "params": [
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "kling-turbo::video_generation": {
+      "key": "kling-turbo::video_generation",
+      "model": "kling-turbo",
+      "taskType": "video_generation",
+      "description": "Unified / internal proxy / kling / 2.5-turbo-pro",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "end_image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "mode",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "start_image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "omni-human::omni-human-1.5": {
+      "key": "omni-human::omni-human-1.5",
+      "model": "omni-human",
+      "taskType": "omni-human-1.5",
+      "description": "Unified / internal proxy / bytedance / omni human 1.5",
+      "params": [
+        {
+          "name": "audio_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "fast_mode",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "seedance::seedance-2-preview": {
+      "key": "seedance::seedance-2-preview",
+      "model": "seedance",
+      "taskType": "seedance-2-preview",
+      "description": "Unified / internal proxy / bytedance / seedance 2",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/qwen-image::txt2img": {
+      "key": "Qubico/qwen-image::txt2img",
+      "model": "Qubico/qwen-image",
+      "taskType": "txt2img",
+      "description": "Unified / qwen image / txt2img",
+      "params": [
+        {
+          "name": "flow_shift",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/qwen-image::image-edit": {
+      "key": "Qubico/qwen-image::image-edit",
+      "model": "Qubico/qwen-image",
+      "taskType": "image-edit",
+      "description": "Unified / qwen image / image edit",
+      "params": [
+        {
+          "name": "flow_shift",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image1",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "image2",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    "Qubico/z-image::txt2img": {
+      "key": "Qubico/z-image::txt2img",
+      "model": "Qubico/z-image",
+      "taskType": "txt2img",
+      "description": "Unified / z-image / txt2img",
+      "params": [
+        {
+          "name": "batch_size",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "flow_shift",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "negative_prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "seed",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "required": false
+        }
+      ]
+    }
+  }
 }
