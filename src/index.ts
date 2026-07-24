@@ -1,6 +1,8 @@
 import { config } from "dotenv";
 import { FastMCP, imageContent, Progress, UserError, Content } from "fastmcp";
 import { z } from "zod";
+import { loadBaseline } from "./sync/catalog.js";
+import { createCatalogToolSpecs } from "./sync/mcp_tools.js";
 // Load environment variables
 config();
 
@@ -37,11 +39,10 @@ const server = new FastMCP({
   version: "1.0.0",
 });
 
-registerTools(server);
-
 // Start the server
 async function main() {
   try {
+    await registerTools(server);
     await server.start({
       transportType: "stdio",
     });
@@ -57,7 +58,7 @@ main().catch((error) => {
 });
 
 // Register Tools
-function registerTools(server: FastMCP) {
+async function registerTools(server: FastMCP) {
   registerGeneralTool(server);
   registerImageTool(server);
   registerVideoTool(server);
@@ -73,9 +74,50 @@ function registerTools(server: FastMCP) {
   registerSunoTool(server);
   registerTrellisTool(server);
   registerHailuoTool(server);
+  await registerCatalogTools(server);
 }
 
 // Tool Definitions
+
+const CATALOG_TASK_CONFIG: BaseConfig = { maxAttempts: 180, timeout: 900 };
+
+async function registerCatalogTools(server: FastMCP) {
+  const catalog = await loadBaseline();
+  if (!catalog || Object.keys(catalog.entries).length === 0) {
+    throw new Error("PiAPI capability baseline is missing or empty");
+  }
+
+  const specs = createCatalogToolSpecs(catalog);
+  for (const spec of specs) {
+    server.addTool({
+      name: spec.name,
+      description: spec.description,
+      parameters: spec.parameters,
+      execute: async (args, { log, reportProgress }) => {
+        const requestBody = JSON.stringify({
+          model: spec.model,
+          task_type: spec.taskType,
+          input: args,
+        });
+        const { taskId, usage, output } = await handleTask(
+          log,
+          reportProgress,
+          requestBody,
+          CATALOG_TASK_CONFIG
+        );
+        return {
+          content: [
+            {
+              type: "text",
+              text: `TaskId: ${taskId}\nPiAPI ${spec.model} / ${spec.taskType} completed.\nUsage: ${usage} tokens\nOutput:\n${JSON.stringify(output)}`,
+            },
+          ],
+        };
+      },
+    });
+  }
+  logger.info(`Registered ${specs.length} contract-backed PiAPI tools`);
+}
 
 function registerGeneralTool(server: FastMCP) {
   server.addTool({

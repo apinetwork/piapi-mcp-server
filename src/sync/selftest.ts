@@ -1,8 +1,10 @@
 // Offline self-test for the sync engine (no network or credentials required).
 
 import { postmanCollectionToOpenApi } from "./fetchers.js";
+import { loadBaseline } from "./catalog.js";
 import { normalize } from "./normalize.js";
 import { diffCatalogs } from "./diff.js";
+import { createCatalogToolSpecs } from "./mcp_tools.js";
 import type { JsonSchema, OpenApiDocument } from "./types.js";
 
 let failures = 0;
@@ -73,6 +75,33 @@ const postmanEntry = postmanCatalog.entries["Qubico/flux1-schnell::txt2img"];
 assert(!!postmanEntry, "GitHub/Postman contract creates a PiAPI capability");
 assert(postmanEntry?.params.some((p) => p.name === "width" && p.type === "number"), "Postman example infers numeric input parameter");
 assert(postmanEntry?.params.some((p) => p.name === "enabled" && p.type === "boolean"), "Postman example infers boolean input parameter");
+
+const specs = createCatalogToolSpecs(after);
+assert(specs.length === Object.keys(after.entries).length, "every catalog capability creates one MCP tool");
+assert(new Set(specs.map((spec) => spec.name)).size === specs.length, "catalog MCP tool names are unique");
+const klingSpec = specs.find((spec) => spec.model === "kling" && spec.taskType === "video_generation");
+assert(!!klingSpec, "catalog tool retains model/task_type identity");
+assert(klingSpec?.parameters.safeParse({ prompt: "hello", duration: 5 }).success === true, "catalog tool accepts contract input");
+assert(klingSpec?.parameters.safeParse({ prompt: "hello", duration: "5" }).success === false, "catalog tool enforces contract parameter types");
+
+const committedCatalog = await loadBaseline();
+const committedSpecs = committedCatalog ? createCatalogToolSpecs(committedCatalog) : [];
+assert(!!committedCatalog, "committed capability baseline loads");
+assert(
+  committedSpecs.length === Object.keys(committedCatalog?.entries ?? {}).length,
+  "every committed capability has a contract-backed MCP tool"
+);
+assert(
+  Object.values(committedCatalog?.entries ?? {}).every((entry) => {
+    const spec = committedSpecs.find(
+      (candidate) => candidate.model === entry.model && candidate.taskType === entry.taskType
+    );
+    return !!spec &&
+      Object.keys(spec.parameters.shape).sort().join("\0") ===
+        entry.params.map((param) => param.name).sort().join("\0");
+  }),
+  "contract-backed MCP schemas expose every committed input parameter"
+);
 
 process.stdout.write(failures === 0 ? "\nALL PASS\n" : `\n${failures} ASSERTION(S) FAILED\n`);
 process.exit(failures === 0 ? 0 : 1);

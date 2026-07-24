@@ -167,11 +167,19 @@ To disable the piapi server:
 
 ## Keeping tools in sync with PiAPI (sync task)
 
-The MCP tool definitions in `src/index.ts` hard-code PiAPI models, `task_type`s,
-and input parameters. This repository includes a repeatable **drift detector**
-that compares a committed catalog baseline with PiAPI Manager's versioned API
-contract. It detects **new APIs**, **deprecated APIs**, **parameter changes**,
-and **description changes**.
+`src/index.ts` registers a contract-backed MCP tool for **every** committed
+PiAPI `(model, task_type)` capability.  Tool names are deterministic:
+`piapi_<model>_<task_type>` (for example,
+`piapi_qubico_flux1_schnell_txt2img`), and their input schemas are generated
+from the committed catalog.  The existing hand-written convenience tools remain
+available; the contract-backed tools ensure the exposed surface stays complete
+as the Manager catalog changes.
+
+The legacy convenience tools in `src/index.ts` remain hand-written, but the
+complete contract-backed surface is generated from the committed catalog. This
+repository includes a repeatable **drift detector** that compares that catalog
+baseline with PiAPI Manager's versioned API contract. It detects **new APIs**,
+**deprecated APIs**, **parameter changes**, and **description changes**.
 
 **Source of truth:** the `Go API.postman_collection.json` contract in the PiAPI
 Manager GitHub repository (`Gocyber-world/midjourney-http-v2`). The task fetches
@@ -200,16 +208,17 @@ local development, an exported OpenAPI JSON file can be supplied instead:
 node dist/sync/cli.js diff --file ./piapi-openapi.json
 ```
 
-When a drift report is produced: update the matching `server.addTool(...)`
-definition(s) in `src/index.ts`, validate the MCP server, then run
-`npm run sync:accept` and commit the code and refreshed baseline together.
+When a drift report is produced, a new capability is already represented by its
+contract-backed MCP tool after the baseline is accepted. Validate the MCP
+server, run `npm run sync:accept`, and commit the refreshed baseline. Update a
+hand-written convenience tool only when a curated model-specific UX is useful.
 
 ### Automation
 
-`.github/workflows/sync-piapi.yml` runs weekly and on demand. On drift it
-opens or updates an issue labelled `piapi-sync` with the report. It only detects
-and reports drift; code-changing automation must use the separately
-owner-approved, least-privilege MCP GitHub credential.
+`.github/workflows/sync-piapi.yml` is retained for manual dispatch only.
+Periodic synchronization is run from the approved local automation environment,
+which holds the separately owner-approved MCP credential and can validate,
+accept, and push catalog updates after its sensitive-information gate passes.
 
 ## Development
 
