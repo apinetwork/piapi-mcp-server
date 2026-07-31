@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-24T08:40:03.682Z",
+  "generatedAt": "2026-07-31T09:25:41.452Z",
   "source": "file · Go API vpostman",
   "entries": {
     "Qubico/flux1-schnell::txt2img": {
@@ -2859,15 +2859,20 @@
         }
       ]
     },
-    "seedance::seedance-2-preview": {
-      "key": "seedance::seedance-2-preview",
+    "seedance::seedance-2": {
+      "key": "seedance::seedance-2",
       "model": "seedance",
-      "taskType": "seedance-2-preview",
-      "description": "Unified / internal proxy / bytedance / seedance 2",
+      "taskType": "seedance-2",
+      "description": "Unified / internal proxy / bytedance / seedance 2 family / Seedance 2",
       "params": [
         {
           "name": "aspect_ratio",
           "type": "string",
+          "required": false
+        },
+        {
+          "name": "audio_urls",
+          "type": "array",
           "required": false
         },
         {
@@ -2876,8 +2881,281 @@
           "required": false
         },
         {
+          "name": "image_urls",
+          "type": "array",
+          "required": false
+        },
+        {
           "name": "prompt",
           "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "video_urls",
+          "type": "array",
+          "required": false
+        }
+      ]
+    },
+    "seedance::seedance-2-fast": {
+      "key": "seedance::seedance-2-fast",
+      "model": "seedance",
+      "taskType": "seedance-2-fast",
+      "description": "Unified / internal proxy / bytedance / seedance 2 family / Seedance 2 Fast",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "audio_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "video_urls",
+          "type": "array",
+          "required": false
+        }
+      ]
+    },
+    "seedance::seedance-2-mini": {
+      "key": "seedance::seedance-2-mini",
+      "model": "seedance",
+      "taskType": "seedance-2-mini",
+      "description": "Unified / internal proxy / bytedance / seedance 2 family / Seedance 2 Mini",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "audio_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "video_urls",
+          "type": "array",
+          "required": false
+        }
+      ]
+    },
+    "seedance::seedance-2-less-restriction": {
+      "key": "seedance::seedance-2-less-restriction",
+      "model": "seedance",
+      "taskType": "seedance-2-less-restriction",
+      "description": "Unified / internal proxy / bytedance / seedance 2 family / Seedance 2 Less Restriction",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "audio_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "video_urls",
+          "type": "array",
+          "required": false
+        }
+      ]
+    },
+    "seedance::seedance-2-fast-less-restriction": {
+      "key": "seedance::seedance-2-fast-less-restriction",
+      "model": "seedance",
+      "taskType": "seedance-2-fast-less-restriction",
+      "description": "Unified / internal proxy / bytedance / seedance 2 family / Seedance 2 Fast Less Restriction",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "audio_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "video_urls",
+          "type": "array",
+          "required": false
+        }
+      ]
+    },
+    "seedance::seedance-2-mini-less-restriction": {
+      "key": "seedance::seedance-2-mini-less-restriction",
+      "model": "seedance",
+      "taskType": "seedance-2-mini-less-restriction",
+      "description": "Unified / internal proxy / bytedance / seedance 2 family / Seedance 2 Mini Less Restriction",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "audio_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "video_urls",
+          "type": "array",
+          "required": false
+        }
+      ]
+    },
+    "seedance::seedance-2.5": {
+      "key": "seedance::seedance-2.5",
+      "model": "seedance",
+      "taskType": "seedance-2.5",
+      "description": "Unified / internal proxy / bytedance / seedance 2 family / Seedance 2.5",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "audio_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "video_urls",
+          "type": "array",
           "required": false
         }
       ]
