@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-31T09:25:41.452Z",
-  "source": "file · Go API vpostman",
+  "generatedAt": "2026-08-10T18:02:14.213Z",
+  "source": "file · PiAPI Manager API Handover v1.0.0",
   "entries": {
     "Qubico/flux1-schnell::txt2img": {
       "key": "Qubico/flux1-schnell::txt2img",
@@ -973,19 +973,6 @@
         }
       ]
     },
-    "music-s::generate_lyrics": {
-      "key": "music-s::generate_lyrics",
-      "model": "music-s",
-      "taskType": "generate_lyrics",
-      "description": "Unified / suno / 生成歌词 MusicS",
-      "params": [
-        {
-          "name": "prompt",
-          "type": "string",
-          "required": false
-        }
-      ]
-    },
     "suno::generate_music": {
       "key": "suno::generate_music",
       "model": "suno",
@@ -1009,72 +996,11 @@
         }
       ]
     },
-    "music-s::generate_music": {
-      "key": "music-s::generate_music",
-      "model": "music-s",
-      "taskType": "generate_music",
-      "description": "Unified / suno / 生成音乐(Description) ModelS",
-      "params": [
-        {
-          "name": "gpt_description_prompt",
-          "type": "string",
-          "required": false
-        },
-        {
-          "name": "make_instrumental",
-          "type": "boolean",
-          "required": false
-        }
-      ]
-    },
     "suno::generate_music_custom": {
       "key": "suno::generate_music_custom",
       "model": "suno",
       "taskType": "generate_music_custom",
       "description": "Unified / suno / 生成音乐(Custom)",
-      "params": [
-        {
-          "name": "continue_at",
-          "type": "number",
-          "required": false
-        },
-        {
-          "name": "continue_clip_id",
-          "type": "string",
-          "required": false
-        },
-        {
-          "name": "model_version",
-          "type": "string",
-          "required": false
-        },
-        {
-          "name": "negative_tags",
-          "type": "string",
-          "required": false
-        },
-        {
-          "name": "prompt",
-          "type": "string",
-          "required": false
-        },
-        {
-          "name": "tags",
-          "type": "string",
-          "required": false
-        },
-        {
-          "name": "title",
-          "type": "string",
-          "required": false
-        }
-      ]
-    },
-    "music-s::generate_music_custom": {
-      "key": "music-s::generate_music_custom",
-      "model": "music-s",
-      "taskType": "generate_music_custom",
-      "description": "Unified / suno / 生成音乐(Custom) MusicS",
       "params": [
         {
           "name": "continue_at",
@@ -1126,37 +1052,11 @@
         }
       ]
     },
-    "music-s::concat_music": {
-      "key": "music-s::concat_music",
-      "model": "music-s",
-      "taskType": "concat_music",
-      "description": "Unified / suno / Clip合并 MusicS",
-      "params": [
-        {
-          "name": "clip_id",
-          "type": "string",
-          "required": false
-        }
-      ]
-    },
     "suno::upload_audio": {
       "key": "suno::upload_audio",
       "model": "suno",
       "taskType": "upload_audio",
       "description": "Unified / suno / 音频上传",
-      "params": [
-        {
-          "name": "audio_url",
-          "type": "string",
-          "required": false
-        }
-      ]
-    },
-    "music-s::upload_audio": {
-      "key": "music-s::upload_audio",
-      "model": "music-s",
-      "taskType": "upload_audio",
-      "description": "Unified / suno / 音频上传 MusicS",
       "params": [
         {
           "name": "audio_url",
@@ -1203,24 +1103,6 @@
         },
         {
           "name": "start_image",
-          "type": "string",
-          "required": false
-        }
-      ]
-    },
-    "luma::extend_video": {
-      "key": "luma::extend_video",
-      "model": "luma",
-      "taskType": "extend_video",
-      "description": "Unified / luma / 视频扩展",
-      "params": [
-        {
-          "name": "key_frames",
-          "type": "object",
-          "required": false
-        },
-        {
-          "name": "prompt",
           "type": "string",
           "required": false
         }
@@ -1533,44 +1415,6 @@
         {
           "name": "prompt",
           "type": "string",
-          "required": false
-        }
-      ]
-    },
-    "hailuo::video_generation": {
-      "key": "hailuo::video_generation",
-      "model": "hailuo",
-      "taskType": "video_generation",
-      "description": "Unified / hailuo / 文生视频",
-      "params": [
-        {
-          "name": "duration",
-          "type": "number",
-          "required": false
-        },
-        {
-          "name": "expand_prompt",
-          "type": "boolean",
-          "required": false
-        },
-        {
-          "name": "image_url",
-          "type": "string",
-          "required": false
-        },
-        {
-          "name": "model",
-          "type": "string",
-          "required": false
-        },
-        {
-          "name": "prompt",
-          "type": "string",
-          "required": false
-        },
-        {
-          "name": "resolution",
-          "type": "number",
           "required": false
         }
       ]
@@ -3156,6 +3000,87 @@
         {
           "name": "video_urls",
           "type": "array",
+          "required": false
+        }
+      ]
+    },
+    "seedance::seedance-2.5-less-restriction": {
+      "key": "seedance::seedance-2.5-less-restriction",
+      "model": "seedance",
+      "taskType": "seedance-2.5-less-restriction",
+      "description": "Unified / internal proxy / bytedance / seedance 2 family / Seedance 2.5 Less Restriction",
+      "params": [
+        {
+          "name": "aspect_ratio",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "audio_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "image_urls",
+          "type": "array",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "video_urls",
+          "type": "array",
+          "required": false
+        }
+      ]
+    },
+    "hailuo::video_generation": {
+      "key": "hailuo::video_generation",
+      "model": "hailuo",
+      "taskType": "video_generation",
+      "description": "Unified / internal proxy / minimax / hailuo2.3",
+      "params": [
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false
+        },
+        {
+          "name": "expand_prompt",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "image_url",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "model",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "prompt",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "resolution",
+          "type": "number",
           "required": false
         }
       ]
