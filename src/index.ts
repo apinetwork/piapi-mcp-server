@@ -3,6 +3,7 @@ import { FastMCP, imageContent, Progress, UserError, Content } from "fastmcp";
 import { z } from "zod";
 import { loadBaseline } from "./sync/catalog.js";
 import { createCatalogToolSpecs } from "./sync/mcp_tools.js";
+import { createPiapiTaskClient, PiapiTaskError } from "./core/piapi-task.js";
 // Load environment variables
 config();
 
@@ -17,6 +18,7 @@ const envArg = args.find(arg => arg.startsWith('--env='));
 const envValue = envArg ? envArg.split('=')[1] : process.env.NODE_ENV;
 
 const apiKey: string = process.env.PIAPI_API_KEY;
+const taskClient = createPiapiTaskClient({ apiKey });
 const isProduction = envValue === 'production';
 
 // Configure logging levels based on environment
@@ -1724,122 +1726,17 @@ async function handleTask(
   requestBody: string,
   config: BaseConfig
 ): Promise<{ taskId: string; usage: string; output: unknown }> {
-  const taskId = await createTask(requestBody);
-  log.info(`Task created with ID: ${taskId}`);
-  return await getTaskResult(
-    log,
-    reportProgress,
-    taskId,
-    config.maxAttempts,
-    config.timeout
-  );
-}
-
-async function createTask(requestBody: string) {
-  const createResponse = await fetch("https://api.piapi.ai/api/v1/task", {
-    method: "POST",
-    headers: {
-      "X-API-Key": apiKey,
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: requestBody,
-  });
-
-  const createData = await createResponse.json();
-
-  if (createData.code !== 200) {
-    throw new UserError(`Task creation failed: ${createData.message}`);
-  }
-
-  return createData.data.task_id;
-}
-
-async function getTaskResult(
-  log: any,
-  reportProgress: (progress: Progress) => Promise<void>,
-  taskId: string,
-  maxAttempts: number,
-  timeout: number
-): Promise<{ taskId: string; usage: string; output: unknown }> {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    // Use environment-specific logger, fallback to provided log if exists
-    const useLogger = log || logger;
-    useLogger.info(`Checking task ${taskId} status (attempt ${attempt + 1}/${maxAttempts})...`);
-
-    reportProgress({
-      progress: (attempt / maxAttempts) * 100,
-      total: 100,
-    });
-
-    const statusResponse = await fetch(
-      `https://api.piapi.ai/api/v1/task/${taskId}`,
-      {
-        headers: {
-          "X-API-Key": apiKey,
-        },
-      }
+  try {
+    return await taskClient.runTask(
+      JSON.parse(requestBody) as Record<string, unknown>,
+      config,
+      log || logger,
+      reportProgress
     );
-
-    const statusData = await statusResponse.json();
-
-    if (statusData.code !== 200) {
-      useLogger.error(`Status check failed for task ${taskId}: ${statusData.message}`);
-      throw new UserError(
-        `TaskId: ${taskId}, Status check failed: ${statusData.message}`
-      );
-    }
-
-    const { status, output, error } = statusData.data;
-
-    useLogger.info(`Task ${taskId} status: ${status}`);
-    
-    // Safely check if progress property exists
-    if (status === "in_progress" && statusData.data.progress !== undefined) {
-      useLogger.info(`Task ${taskId} progress: ${statusData.data.progress}%`);
-    }
-
-    if (status === "completed") {
-      if (!output) {
-        useLogger.error(`Task ${taskId} completed but no output found`);
-        throw new UserError(
-          `TaskId: ${taskId}, Task completed but no output found`
-        );
-      }
-      const usage = statusData.data.meta?.usage?.consume || "unknown";
-      useLogger.info(`Task ${taskId} completed successfully. Usage: ${usage}`);
-      
-      // Don't log huge JSON objects that might crash the console
-      try {
-        const outputStr = JSON.stringify(output);
-        if (outputStr.length < 1000) {
-          useLogger.debug(`Task ${taskId} output: ${outputStr}`);
-        } else {
-          useLogger.debug(`Task ${taskId} output: [Large output, length: ${outputStr.length} chars]`);
-        }
-      } catch (err: any) {
-        useLogger.debug(`Task ${taskId} output: [Could not stringify output: ${err.message}]`);
-      }
-
-      return { taskId, usage, output };
-    }
-
-    if (status === "failed") {
-      useLogger.error(`Task ${taskId} failed: ${error?.message || "Unknown error"}`);
-      throw new UserError(
-        `TaskId: ${taskId}, Generation failed: ${error?.message || "Unknown error"}`
-      );
-    }
-
-    await new Promise((resolve) =>
-      setTimeout(resolve, (timeout * 1000) / maxAttempts)
-    );
+  } catch (error) {
+    if (error instanceof PiapiTaskError) throw new UserError(error.message);
+    throw error;
   }
-
-  logger.error(`Task ${taskId} timed out after ${timeout} seconds`);
-  throw new UserError(
-    `TaskId: ${taskId}, Generation timed out after ${timeout} seconds`
-  );
 }
 
 // Result parser

@@ -18,6 +18,10 @@ function resolveBaselinePath(): string {
   const candidates = [
     resolve(__dirname, "baseline.piapi-catalog.json"),
     resolve(__dirname, "../../src/sync/baseline.piapi-catalog.json"),
+    // The isolated MCP Apps package compiles shared sources under
+    // modern/dist/src/, so its generated catalog module is two levels deeper
+    // than the legacy dist/sync/ layout.
+    resolve(__dirname, "../../../../src/sync/baseline.piapi-catalog.json"),
   ];
   return candidates.find((p) => existsSync(p)) ?? candidates[candidates.length - 1];
 }

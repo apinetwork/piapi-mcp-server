@@ -39,7 +39,7 @@ Note: Time-consuming tools like video generation may not complete due to Claude'
 
 ## Prerequisites
 
-- Node.js 16.x or higher
+- Node.js 18.15+ for the legacy server; **Node.js 20+** for the MCP Apps preview entry
 - npm or yarn
 - A PiAPI API key (get one at [piapi.ai](https://piapi.ai/workspace/key))
 
@@ -248,3 +248,35 @@ piapi-mcp-server/
 ## License
 
 MIT
+
+## MCP Apps media preview (modern entry, preview)
+
+The existing `dist/index.js` FastMCP/stdio entry remains the compatibility path for
+current users. It keeps the existing tool names and text result behavior.
+
+For MCP hosts that implement **MCP Apps**, build the modern entry and configure the
+client to run `modern/dist/modern/src/index.js`. It exposes the committed PiAPI catalog
+and a generic `piapi_run_task` tool. Tools return a text fallback, structured media
+metadata, resource links, and a `ui://piapi/media-gallery` resource. Compatible hosts
+can render images, videos, audio, and recognized 3D assets inline; other hosts retain
+links that can be opened or downloaded.
+
+```bash
+npm install
+(cd modern && npm install)
+npm run build:all
+```
+
+`npm run build` remains the legacy-only build command for existing users. The modern entry still uses `PIAPI_API_KEY` from the environment. It never provides
+that key to the UI. By default the gallery only permits `https://piapi.ai` and
+`https://*.piapi.ai` as embedded media origins. Operators can explicitly extend the
+allowlist for their approved artifact CDN domains with:
+
+```bash
+PIAPI_MEDIA_RESOURCE_DOMAINS="https://cdn.piapi.ai,https://media.example.com"
+```
+
+For a separate hosted viewer fallback, set the optional HTTPS-only
+`PIAPI_MEDIA_VIEWER_BASE_URL`; the server will add the task ID as a query parameter.
+Remote HTTP/OAuth deployment for ChatGPT or other hosted clients is intentionally a
+separate concern from this local stdio entry.

@@ -8,13 +8,19 @@
     "node": ">=18.15.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:legacy",
     "inspect": "npx fastmcp inspect dist/index.js",
     "sync": "node dist/sync/cli.js diff",
     "sync:snapshot": "node dist/sync/cli.js snapshot",
     "sync:accept": "node dist/sync/cli.js accept",
     "sync:report": "node dist/sync/cli.js report-file sync-report.md",
-    "test:sync": "node dist/sync/selftest.js"
+    "test:sync": "node dist/sync/selftest.js",
+    "build:legacy": "tsc",
+    "build:apps": "npm --prefix modern run build",
+    "test:core": "node dist/core/selftest.js",
+    "test:apps": "npm --prefix modern run test",
+    "test": "npm run build:all && npm run test:core && npm run test:sync && npm run test:apps",
+    "build:all": "npm run build && npm run build:apps"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.10.2",
@@ -24,6 +30,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.19.0",
+    "esbuild": "^0.25.12",
     "typescript": "^5.3.3"
   }
 }
