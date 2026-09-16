@@ -35,12 +35,17 @@ export function normalizePiapiMediaResult(
   const add = (kind: PiapiMediaKind, value: unknown, previewUrl?: string) => {
     for (const url of urlsFrom(value)) {
       const key = `${kind}:${url}`;
-      if (seen.has(key)) continue;
+      const safePreviewUrl = previewUrl && isSafeUrl(previewUrl) ? previewUrl : undefined;
+      if (seen.has(key)) {
+        const existing = assets.find((asset) => `${asset.kind}:${asset.url}` === key);
+        if (existing && safePreviewUrl && !existing.previewUrl) existing.previewUrl = safePreviewUrl;
+        continue;
+      }
       seen.add(key);
       assets.push({
         kind,
         url,
-        ...(previewUrl && isSafeUrl(previewUrl) ? { previewUrl } : {}),
+        ...(safePreviewUrl ? { previewUrl: safePreviewUrl } : {}),
         ...(kind === "model" ? { format: modelFormat(url) } : {}),
       });
     }
@@ -60,10 +65,21 @@ export function normalizePiapiMediaResult(
     }
   });
 
-  // A few provider payloads expose music clips as { clips: { id: { audio_url,
-  // image_url } } }; the generic walker captures both fields. Unknown URL fields
-  // intentionally stay text-only rather than guessing a media type.
+  // Carry known companion artifacts into the UI without hiding them from the
+  // standard asset list: a Luma last frame can become a video poster, and a
+  // music clip's image can become its audio cover. Unknown URL fields remain
+  // text-only rather than being guessed as media.
+  if (isRecord(output)) {
+    add("video", output.video_raw, firstUrl(output.last_frame));
+    if (isRecord(output.clips)) {
+      for (const clip of Object.values(output.clips)) {
+        if (isRecord(clip)) add("audio", clip.audio_url, firstUrl(clip.image_url));
+      }
+    }
+  }
+
   return { taskId, ...(usage ? { usage } : {}), assets, ...(viewerUrl ? { viewerUrl } : {}) };
+
 }
 
 export function mediaResultText(result: PiapiMediaResult): string {
@@ -94,6 +110,10 @@ function walk(value: unknown, visit: (key: string, value: unknown, parent: Recor
     visit(key, child, contextualParent);
     walk(child, visit, key);
   }
+}
+
+function firstUrl(value: unknown): string | undefined {
+  return urlsFrom(value)[0];
 }
 
 function urlsFrom(value: unknown): string[] {

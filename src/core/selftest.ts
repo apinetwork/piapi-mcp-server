@@ -5,11 +5,14 @@ import { mediaMimeType, normalizePiapiMediaResult } from "./media-result.js";
 const media = normalizePiapiMediaResult("task-1", "3", {
   image_urls: ["https://cdn.piapi.ai/a.png"],
   video_raw: { url: "https://cdn.piapi.ai/v.mp4" },
+  last_frame: { url: "https://cdn.piapi.ai/v.jpg" },
   clips: { one: { audio_url: "https://cdn.piapi.ai/a.mp3", image_url: "https://cdn.piapi.ai/cover.jpg" } },
   model_file: "https://cdn.piapi.ai/model.glb",
 });
-assert.deepEqual(media.assets.map((asset) => asset.kind), ["image", "video", "audio", "image", "model"]);
-assert.equal(mediaMimeType(media.assets[4]), "model/gltf-binary");
+assert.deepEqual(media.assets.map((asset) => asset.kind), ["image", "video", "image", "audio", "image", "model"]);
+assert.equal(mediaMimeType(media.assets.find((asset) => asset.kind === "model")!), "model/gltf-binary");
+assert.equal(media.assets.find((asset) => asset.kind === "video")?.previewUrl, "https://cdn.piapi.ai/v.jpg");
+assert.equal(media.assets.find((asset) => asset.kind === "audio")?.previewUrl, "https://cdn.piapi.ai/cover.jpg");
 assert.equal(normalizePiapiMediaResult("task-2", undefined, { url: "https://untyped.example/out" }).assets.length, 0);
 
 const responses = [
