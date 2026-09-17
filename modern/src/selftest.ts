@@ -23,6 +23,7 @@ const html = mediaGalleryHtml(["https://cdn.piapi.ai"]);
 assert.ok(html.includes("ui/initialize"));
 assert.ok(html.includes("Open / download original"));
 assert.ok(html.includes("GLTFLoader"));
+assert.ok(html.includes("setURLModifier"));
 assert.ok(!html.includes("PIAPI_API_KEY"));
 const catalog = {
   generatedAt: "2026-09-16T00:00:00Z",

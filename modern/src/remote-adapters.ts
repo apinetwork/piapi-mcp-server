@@ -26,6 +26,7 @@ export interface HttpOAuthTokenVerifierOptions {
    * deployment secret, never an MCP client token or PiAPI user credential.
    */
   authorizationHeader: string;
+  timeoutMs?: number;
   fetchImpl?: FetchLike;
 }
 
@@ -37,6 +38,7 @@ export interface HttpTenantResolverOptions {
    * a tenant API key to a browser or untrusted client.
    */
   authorizationHeader: string;
+  timeoutMs?: number;
   fetchImpl?: FetchLike;
 }
 
@@ -45,6 +47,7 @@ export function createHttpOAuthTokenVerifier(options: HttpOAuthTokenVerifierOpti
   assertSecureServiceUrl(options.resourceServerUrl, "MCP resource server URL");
   assertAuthorizationHeader(options.authorizationHeader, "OAuth introspection authorization");
   const fetchImpl = options.fetchImpl ?? fetch;
+  const timeoutMs = boundedTimeout(options.timeoutMs);
 
   return {
     async verifyAccessToken(token): Promise<AuthInfo> {
@@ -56,6 +59,7 @@ export function createHttpOAuthTokenVerifier(options: HttpOAuthTokenVerifierOpti
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({ token }).toString(),
+        signal: AbortSignal.timeout(timeoutMs),
       });
       if (!response.ok) throw new Error(`OAuth introspection request failed (${response.status})`);
 
@@ -85,6 +89,7 @@ export function createHttpTenantResolver(options: HttpTenantResolverOptions): Pi
   assertSecureServiceUrl(options.brokerUrl, "MCP tenant broker URL");
   assertAuthorizationHeader(options.authorizationHeader, "MCP tenant broker authorization");
   const fetchImpl = options.fetchImpl ?? fetch;
+  const timeoutMs = boundedTimeout(options.timeoutMs);
 
   return {
     async resolve(auth): Promise<PiapiMcpTenant> {
@@ -102,6 +107,7 @@ export function createHttpTenantResolver(options: HttpTenantResolverOptions): Pi
           scopes: auth.scopes,
           expires_at: auth.expiresAt,
         }),
+        signal: AbortSignal.timeout(timeoutMs),
       });
       if (!response.ok) throw new Error(`MCP tenant broker request failed (${response.status})`);
 
@@ -116,9 +122,20 @@ export function createHttpTenantResolver(options: HttpTenantResolverOptions): Pi
 }
 
 function assertSecureServiceUrl(url: URL, name: string): void {
+  if (url.username || url.password || url.search || url.hash) {
+    throw new Error(`${name} cannot contain credentials, a query string, or a fragment`);
+  }
   if (url.protocol === "https:") return;
   if (url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1")) return;
   throw new Error(`${name} must use HTTPS outside local loopback testing`);
+}
+
+function boundedTimeout(value: number | undefined): number {
+  if (value === undefined) return 10_000;
+  if (!Number.isInteger(value) || value < 1_000 || value > 60_000) {
+    throw new Error("Service adapter timeout must be an integer between 1000 and 60000 milliseconds");
+  }
+  return value;
 }
 
 function assertAuthorizationHeader(value: string, name: string): void {

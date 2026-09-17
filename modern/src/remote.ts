@@ -1,4 +1,5 @@
 import {
+  buildOAuthProtectedResourceMetadata,
   createMcpHandler,
   getOAuthProtectedResourceMetadataUrl,
   hostHeaderValidationResponse,
@@ -57,6 +58,7 @@ export interface PiapiAppsRemoteOptions {
  * retained in a connection or reused for a different bearer token.
  */
 export function createPiapiAppsRemoteHandler(options: PiapiAppsRemoteOptions): McpHttpHandler {
+  assertRemoteConfiguration(options);
   const resourceMetadataUrl = getOAuthProtectedResourceMetadataUrl(options.resourceServerUrl);
   const requiredScopes = options.requiredScopes ?? ["mcp"];
   const authorize = requireBearerAuth({
@@ -95,10 +97,11 @@ export function createPiapiAppsRemoteHandler(options: PiapiAppsRemoteOptions): M
       );
       if (rejectedHost) return rejectedHost;
 
-      if (options.allowedOriginHostnames) {
-        const rejectedOrigin = originValidationResponse(request, options.allowedOriginHostnames);
-        if (rejectedOrigin) return rejectedOrigin;
-      }
+      // Browser-origin requests are deny-by-default. MCP native clients do
+      // not need an Origin header; a web host must be explicitly allowlisted
+      // by the deployment rather than inheriting ambient browser access.
+      const rejectedOrigin = originValidationResponse(request, options.allowedOriginHostnames ?? []);
+      if (rejectedOrigin) return rejectedOrigin;
 
       const metadata = oauthMetadataResponse(request, options.authMetadata);
       if (metadata) return metadata;
@@ -113,4 +116,28 @@ export function createPiapiAppsRemoteHandler(options: PiapiAppsRemoteOptions): M
       return mcp.fetch(request, { ...requestOptions, authInfo: auth });
     },
   };
+}
+
+function assertRemoteConfiguration(options: PiapiAppsRemoteOptions): void {
+  assertSecureMcpUrl(options.resourceServerUrl, "MCP resource server URL");
+  if (!sameUrl(options.authMetadata.resourceServerUrl, options.resourceServerUrl)) {
+    throw new Error("OAuth metadata resourceServerUrl must exactly match the MCP resource server URL");
+  }
+  // Fail at startup for an invalid issuer/metadata pair rather than waiting
+  // for the first discovery request. The helper also enforces HTTPS outside
+  // an explicitly opted-in local test configuration.
+  buildOAuthProtectedResourceMetadata(options.authMetadata);
+}
+
+function assertSecureMcpUrl(url: URL, name: string): void {
+  if (url.username || url.password || url.search || url.hash) {
+    throw new Error(`${name} cannot contain credentials, a query string, or a fragment`);
+  }
+  if (url.protocol === "https:") return;
+  if (url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1")) return;
+  throw new Error(`${name} must use HTTPS outside local loopback testing`);
+}
+
+function sameUrl(a: URL, b: URL): boolean {
+  return a.href === b.href;
 }

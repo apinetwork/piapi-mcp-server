@@ -150,7 +150,14 @@ function appendGlbPreview(card: HTMLElement, asset: Asset): void {
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(frame);
 
-    const loader = new GLTFLoader();
+    const manager = new THREE.LoadingManager();
+    manager.setURLModifier((requestedUrl) => {
+      if (requestedUrl.startsWith("blob:") || requestedUrl.startsWith("data:")) return requestedUrl;
+      const resolvedUrl = new URL(requestedUrl, asset.url).href;
+      if (!isAllowed(resolvedUrl)) throw new Error("3D asset dependency is outside the approved media origins");
+      return resolvedUrl;
+    });
+    const loader = new GLTFLoader(manager);
     loader.load(asset.url, (gltf) => {
       const model = gltf.scene;
       scene.add(model);

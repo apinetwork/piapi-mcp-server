@@ -108,7 +108,7 @@ function requiredUrl(value: string | undefined, name: string): URL {
     throw new Error(`${name} must be an absolute URL`);
   }
   if (url.protocol !== "https:") throw new Error(`${name} must use HTTPS`);
-  if (url.username || url.password || url.hash) throw new Error(`${name} cannot contain credentials or a fragment`);
+  if (url.username || url.password || url.search || url.hash) throw new Error(`${name} cannot contain credentials, a query string, or a fragment`);
   return url;
 }
 

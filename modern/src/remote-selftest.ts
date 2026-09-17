@@ -54,6 +54,7 @@ const remoteAdapterVerifier = createHttpOAuthTokenVerifier({
     assert.equal(String(url), `http://127.0.0.1:${address.port}/introspect`);
     assert.equal(new Headers(init?.headers).get("authorization"), "Bearer introspection-service-token");
     assert.equal(init?.body, "token=adapter-token");
+    assert.ok(init?.signal);
     return new Response(JSON.stringify({
       active: true,
       sub: "subject-1",
@@ -69,6 +70,22 @@ assert.equal(adapterAuth.clientId, "oauth-client-1");
 assert.deepEqual(adapterAuth.scopes, ["mcp", "media"]);
 assert.equal(adapterAuth.extra?.subject, "subject-1");
 
+const wrongAudienceVerifier = createHttpOAuthTokenVerifier({
+  introspectionUrl: new URL(`http://127.0.0.1:${address.port}/introspect`),
+  resourceServerUrl,
+  authorizationHeader: "Bearer introspection-service-token",
+  fetchImpl: async () => new Response(JSON.stringify({
+    active: true,
+    sub: "subject-1",
+    exp: Math.floor(Date.now() / 1000) + 60,
+    aud: "https://attacker.example/mcp",
+  }), { status: 200 }),
+});
+await assert.rejects(
+  () => wrongAudienceVerifier.verifyAccessToken("wrong-audience-token"),
+  (error: unknown) => error instanceof OAuthError && error.code === OAuthErrorCode.InvalidToken,
+);
+
 const remoteAdapterResolver = createHttpTenantResolver({
   brokerUrl: new URL(`http://127.0.0.1:${address.port}/tenant-broker`),
   authorizationHeader: "Bearer broker-service-token",
@@ -81,6 +98,7 @@ const remoteAdapterResolver = createHttpTenantResolver({
       scopes: ["mcp", "media"],
       expires_at: adapterAuth.expiresAt,
     });
+    assert.ok(init?.signal);
     return new Response(JSON.stringify({
       api_key: "dummy-api-key",
       api_base_url: delegatedApiBaseUrl,
@@ -149,6 +167,16 @@ try {
   });
   assert.equal(denied.status, 401);
   assert.match(denied.headers.get("www-authenticate") ?? "", /resource_metadata=/);
+
+  const crossOrigin = await fetch(resourceServerUrl, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      Origin: "https://attacker.example",
+    },
+    body: "{}",
+  });
+  assert.equal(crossOrigin.status, 403);
 
   const transport = new StreamableHTTPClientTransport(resourceServerUrl, {
     authProvider: { token: async () => "remote-test-token" },

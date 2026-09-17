@@ -13,7 +13,8 @@ deployment:
 - RFC 9728 protected-resource metadata and authorization-server metadata;
 - Bearer-token verification through an injected `OAuthTokenVerifier`;
 - scope enforcement (`mcp` by default);
-- host-header validation, with optional Origin allowlisting;
+- host-header validation and deny-by-default Origin handling (web hosts must
+  be explicitly allowlisted);
 - a fresh MCP server per authenticated HTTP request;
 - a tenant resolver that obtains the PiAPI credential only after the bearer
   token is validated.
@@ -85,6 +86,9 @@ values in client configuration, repository files, or public documentation.
 
 - Public endpoint: HTTPS reverse proxy terminates TLS, forwards only to the
   remote handler, and preserves the public `Host` header.
+- Native MCP clients normally send no `Origin` header. If a browser-hosted
+  client requires one, set `PIAPI_MCP_ALLOWED_ORIGIN_HOSTNAMES` to the exact
+  hostnames; do not use a wildcard allowlist.
 - Per-request handling is stateless; horizontal scaling does not retain a
   previous tenant's PiAPI key in an MCP session.
 - The resource URL, OAuth issuer, and discovery metadata must be public,
