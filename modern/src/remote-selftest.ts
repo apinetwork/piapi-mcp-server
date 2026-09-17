@@ -82,13 +82,13 @@ const remoteAdapterResolver = createHttpTenantResolver({
       expires_at: adapterAuth.expiresAt,
     });
     return new Response(JSON.stringify({
-      api_key: "delegated-tenant-key",
+      api_key: "dummy-api-key",
       api_base_url: delegatedApiBaseUrl,
     }), { status: 200 });
   },
 });
 assert.deepEqual(await remoteAdapterResolver.resolve(adapterAuth), {
-  apiKey: "delegated-tenant-key",
+  apiKey: "dummy-api-key",
   apiBaseUrl: delegatedApiBaseUrl,
 });
 
@@ -124,7 +124,7 @@ const handler = createPiapiAppsRemoteHandler({
   tenantResolver: {
     async resolve(auth) {
       assert.equal(auth.clientId, "remote-test-client");
-      return { apiKey: "tenant-test-key", apiBaseUrl: delegatedApiBaseUrl };
+      return { apiKey: "dummy-api-key", apiBaseUrl: delegatedApiBaseUrl };
     },
   },
   catalog,
@@ -163,7 +163,7 @@ try {
   });
   assert.equal(result.isError, undefined);
   assert.equal((result.structuredContent as { taskId?: string } | undefined)?.taskId, "remote-task");
-  assert.equal(upstreamApiKey, "tenant-test-key");
+  assert.equal(upstreamApiKey, "dummy-api-key");
   await client.close();
 } finally {
   await handler.close();
