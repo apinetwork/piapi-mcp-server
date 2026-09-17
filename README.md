@@ -293,3 +293,13 @@ it accepts HTTPS endpoints and limits plain HTTP to `localhost` or
 documents which Manager result fields can be embedded by the gallery. Recognized
 `.glb` output has an inline MCP Apps preview with a download-link fallback; see
 [`modern/docs/three-d-preview.md`](modern/docs/three-d-preview.md).
+
+## Remote HTTPS / OAuth deployment
+
+The modern package now also exposes a reusable authenticated Streamable HTTP
+handler for hosted MCP clients. It is deliberately a resource-server building
+block, not a bundled authorization server: PiAPI account OAuth, token
+verification, and tenant-to-credential lookup must be supplied by the
+deploying service. See
+[`modern/docs/remote-oauth.md`](modern/docs/remote-oauth.md) for the required
+security boundaries and integration contract.

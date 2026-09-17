@@ -19,7 +19,7 @@ export interface PiapiAppsServerOptions {
   logger?: AppsLogger;
 }
 
-interface AppsLogger {
+export interface AppsLogger {
   debug(message: string): void;
   info(message: string): void;
   error(message: string): void;
