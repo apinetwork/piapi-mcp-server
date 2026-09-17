@@ -41,6 +41,12 @@ assert.deepEqual(managerMedia.assets.map((asset) => `${asset.kind}:${asset.url}`
   "image:https://cdn.piapi.ai/kling-image.jpg",
   "audio:https://cdn.piapi.ai/kling-audio.mp3",
 ]);
+const expiringMedia = normalizePiapiMediaResult("task-2b", undefined, {
+  image_url: "https://cdn.piapi.ai/image.png?Expires=1790000000",
+  video_url: "https://cdn.piapi.ai/video.mp4?X-Amz-Date=20260917T000000Z&X-Amz-Expires=3600",
+});
+assert.equal(expiringMedia.assets[0]?.expiresAt, "2026-09-21T14:13:20.000Z");
+assert.equal(expiringMedia.assets[1]?.expiresAt, "2026-09-17T01:00:00.000Z");
 
 const responses = [
   { code: 200, data: { task_id: "task-3" } },

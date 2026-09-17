@@ -3,7 +3,7 @@ import { Client } from "@modelcontextprotocol/client";
 import { InMemoryTransport } from "@modelcontextprotocol/server";
 import { createPiapiTaskClient } from "../../src/core/piapi-task.js";
 import { apiBaseUrlFromEnvironment, DEFAULT_PIAPI_API_BASE_URL } from "./api-base-url.js";
-import { createPiapiAppsServer } from "./server.js";
+import { createPiapiAppsServer, viewerBaseUrlFromEnvironment } from "./server.js";
 import { mediaDomainsFromEnvironment, mediaGalleryHtml, MEDIA_GALLERY_URI } from "./media-gallery.js";
 import { createModernCatalogToolSpecs } from "./catalog.js";
 
@@ -14,10 +14,15 @@ assert.equal(apiBaseUrlFromEnvironment("https://api.piapi.ai/api/v1/"), "https:/
 assert.equal(apiBaseUrlFromEnvironment("http://127.0.0.1:4318/api/v1"), "http://127.0.0.1:4318/api/v1");
 assert.throws(() => apiBaseUrlFromEnvironment("http://example.com/api/v1"), /HTTPS/);
 assert.throws(() => apiBaseUrlFromEnvironment("https://api.piapi.ai/api/v1?unsafe=true"), /query string/);
+assert.equal(viewerBaseUrlFromEnvironment("https://viewer.example.com/result")?.href, "https://viewer.example.com/result");
+assert.equal(viewerBaseUrlFromEnvironment("http://viewer.example.com/result"), undefined);
+assert.equal(viewerBaseUrlFromEnvironment("https://user:pass@viewer.example.com/result"), undefined);
+assert.equal(viewerBaseUrlFromEnvironment("https://viewer.example.com/result?url=https%3A%2F%2Fcdn.example"), undefined);
 assert.deepEqual(mediaDomainsFromEnvironment("https://cdn.piapi.ai,invalid,http://unsafe.example"), ["https://cdn.piapi.ai"]);
 const html = mediaGalleryHtml(["https://cdn.piapi.ai"]);
 assert.ok(html.includes("ui/initialize"));
 assert.ok(html.includes("Open / download original"));
+assert.ok(html.includes("GLTFLoader"));
 assert.ok(!html.includes("PIAPI_API_KEY"));
 const catalog = {
   generatedAt: "2026-09-16T00:00:00Z",
@@ -76,6 +81,7 @@ assert.equal(structured.taskId, "task-ui-1");
 assert.equal(structured.assets?.length, 5);
 assert.equal(structured.assets?.find((asset) => asset.kind === "video")?.previewUrl, "https://cdn.piapi.ai/demo.jpg");
 assert.equal(structured.assets?.find((asset) => asset.kind === "audio")?.previewUrl, "https://cdn.piapi.ai/cover.jpg");
+assert.equal((toolResult.structuredContent as { viewerUrl?: string }).viewerUrl, "https://viewer.example.com/result?taskId=task-ui-1");
 assert.equal(toolResult.content?.filter((entry) => entry.type === "resource_link").length, 5);
 const gallery = await client.readResource({ uri: MEDIA_GALLERY_URI });
 assert.equal(gallery.contents[0]?.mimeType, "text/html;profile=mcp-app");

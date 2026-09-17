@@ -278,6 +278,8 @@ PIAPI_MEDIA_RESOURCE_DOMAINS="https://cdn.piapi.ai,https://media.example.com"
 
 For a separate hosted viewer fallback, set the optional HTTPS-only
 `PIAPI_MEDIA_VIEWER_BASE_URL`; the server will add the task ID as a query parameter.
+The viewer base cannot include credentials, a query string, or a fragment; the
+MCP Apps UI never supplies it with a raw artifact URL or the PiAPI key.
 Remote HTTP/OAuth deployment for ChatGPT or other hosted clients is intentionally a
 separate concern from this local stdio entry.
 
@@ -288,4 +290,6 @@ local mock testing only, the modern executable accepts `PIAPI_API_BASE_URL`;
 it accepts HTTPS endpoints and limits plain HTTP to `localhost` or
 `127.0.0.1`. The separately versioned
 [`PiAPI media result profile`](modern/docs/piapi-media-result-profile.md)
-documents which Manager result fields can be embedded by the gallery.
+documents which Manager result fields can be embedded by the gallery. Recognized
+`.glb` output has an inline MCP Apps preview with a download-link fallback; see
+[`modern/docs/three-d-preview.md`](modern/docs/three-d-preview.md).

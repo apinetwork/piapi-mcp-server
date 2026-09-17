@@ -30,6 +30,25 @@ Two display-specific companion rules remain in
 - A music clip's `image_url` is retained as an image and is also used as the
   `audio_url` cover.
 
+Recognized `.glb` model assets are rendered in the gallery using the bundled
+Three.js loader; `.obj` assets retain the safe download-link fallback. See
+[`three-d-preview.md`](three-d-preview.md).
+
+## Temporary URLs and safe viewer boundary
+
+The profile exposes an optional `expiresAt` on media assets when it can
+conservatively read a standard `Expires` epoch parameter or AWS
+`X-Amz-Date`/`X-Amz-Expires` parameters from the artifact URL. The gallery
+uses that information only to avoid initiating an expired inline preview and
+to tell the user that the original link may no longer work.
+
+`PIAPI_MEDIA_VIEWER_BASE_URL` is an optional HTTPS-only viewer base. It cannot
+contain credentials, a query string, or a fragment, and the server appends only
+the URL-encoded PiAPI `taskId`. The browser-side gallery never sends an
+artifact URL or a PiAPI key to the viewer. A future remote/OAuth deployment can
+use the task ID to authorize the caller and re-resolve a fresh artifact URL on
+the server side.
+
 ## Source evidence and maintenance
 
 The field inventory was checked against the PiAPI Manager source on

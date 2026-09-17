@@ -8,6 +8,7 @@ export interface PiapiMediaAsset {
   kind: PiapiMediaKind;
   url: string;
   previewUrl?: string;
+  expiresAt?: string;
   format?: "glb" | "obj" | "unknown";
 }
 
@@ -30,6 +31,7 @@ export function normalizePiapiMediaResult(
     for (const url of urlsFrom(value)) {
       const key = `${kind}:${url}`;
       const safePreviewUrl = previewUrl && isSafeUrl(previewUrl) ? previewUrl : undefined;
+      const expiresAt = expiryFromUrl(url);
       if (seen.has(key)) {
         const existing = assets.find((asset) => `${asset.kind}:${asset.url}` === key);
         if (existing && safePreviewUrl && !existing.previewUrl) existing.previewUrl = safePreviewUrl;
@@ -40,6 +42,7 @@ export function normalizePiapiMediaResult(
         kind,
         url,
         ...(safePreviewUrl ? { previewUrl: safePreviewUrl } : {}),
+        ...(expiresAt ? { expiresAt } : {}),
         ...(kind === "model" ? { format: modelFormat(url) } : {}),
       });
     }
@@ -137,6 +140,41 @@ function extension(url: string): string {
 function modelFormat(url: string): "glb" | "obj" | "unknown" {
   const ext = extension(url);
   return ext === "glb" || ext === "obj" ? ext : "unknown";
+}
+
+/**
+ * Read common presigned-URL expiration conventions without modifying the
+ * artifact URL. The value is informational: the media URL remains a direct
+ * HTTPS link and any re-signing must happen in an authenticated server-side
+ * viewer, never inside the MCP Apps iframe.
+ */
+function expiryFromUrl(value: string): string | undefined {
+  try {
+    const url = new URL(value);
+    const expires = url.searchParams.get("Expires");
+    if (expires && /^\d{10,13}$/.test(expires)) {
+      const seconds = Number(expires.length === 13 ? Math.floor(Number(expires) / 1000) : expires);
+      const date = new Date(seconds * 1000);
+      if (!Number.isNaN(date.getTime())) return date.toISOString();
+    }
+
+    const amzDate = url.searchParams.get("X-Amz-Date");
+    const amzExpires = url.searchParams.get("X-Amz-Expires");
+    if (amzDate && amzExpires && /^\d{8}T\d{6}Z$/.test(amzDate) && /^\d+$/.test(amzExpires)) {
+      const parts = amzDate.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);
+      if (!parts) return undefined;
+      const issuedAt = Date.UTC(
+        Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]),
+        Number(parts[4]), Number(parts[5]), Number(parts[6])
+      );
+      const date = new Date(issuedAt + Number(amzExpires) * 1000);
+      if (!Number.isNaN(date.getTime())) return date.toISOString();
+    }
+  } catch {
+    // URLs have already been validated elsewhere; malformed expiry metadata
+    // is simply absent rather than a task failure.
+  }
+  return undefined;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

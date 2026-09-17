@@ -1,9 +1,13 @@
 import { App } from "@modelcontextprotocol/ext-apps";
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 type Asset = {
   kind: "image" | "video" | "audio" | "model";
   url: string;
   previewUrl?: string;
+  expiresAt?: string;
   format?: string;
 };
 type MediaResult = { taskId?: string; usage?: string; assets?: Asset[]; viewerUrl?: string };
@@ -12,6 +16,7 @@ const allowedDomains = Array.isArray(window.__PIAPI_MEDIA_RESOURCE_DOMAINS__)
   ? window.__PIAPI_MEDIA_RESOURCE_DOMAINS__
   : [];
 const appRoot = document.getElementById("app");
+let disposePreviews: Array<() => void> = [];
 
 if (!appRoot) throw new Error("PiAPI media gallery root is missing");
 
@@ -25,6 +30,8 @@ void app.connect().catch(() => {
 });
 
 function render(result: MediaResult | undefined): void {
+  for (const dispose of disposePreviews) dispose();
+  disposePreviews = [];
   if (!result) {
     appRoot.replaceChildren(message("The task completed without structured media metadata. Use the links in the tool result."));
     return;
@@ -53,13 +60,25 @@ function card(asset: Asset): HTMLElement {
   const kind = document.createElement("div");
   kind.className = "kind";
   kind.textContent = `${asset.kind}${asset.format ? ` · ${asset.format}` : ""}`;
-  body.append(kind, externalLink(asset.url, "Open / download original"));
+  body.append(kind);
+  if (asset.expiresAt) {
+    const expiry = document.createElement("div");
+    expiry.className = "expiry";
+    const expires = new Date(asset.expiresAt);
+    expiry.textContent = Number.isNaN(expires.getTime())
+      ? "Temporary URL expiry unavailable"
+      : expires.getTime() <= Date.now()
+        ? "Temporary URL may have expired"
+        : `Temporary URL expires ${expires.toLocaleString()}`;
+    body.append(expiry);
+  }
+  body.append(externalLink(asset.url, "Open / download original"));
   element.append(body);
   return element;
 }
 
 function appendPreview(card: HTMLElement, asset: Asset): void {
-  if (!isAllowed(asset.url)) return;
+  if (!isAllowed(asset.url) || hasExpired(asset.expiresAt)) return;
   if (asset.kind === "image") {
     const image = document.createElement("img");
     image.src = asset.url;
@@ -87,7 +106,84 @@ function appendPreview(card: HTMLElement, asset: Asset): void {
     audio.controls = true;
     audio.preload = "metadata";
     card.append(audio);
+  } else if (asset.kind === "model" && asset.format === "glb") {
+    appendGlbPreview(card, asset);
   }
+}
+
+/**
+ * A self-contained GLB renderer. The Three.js bundle is served inside the
+ * `ui://` resource, so the UI never needs an external script origin. GLTF
+ * fetching remains subject to the same media-origin allowlist as other assets.
+ */
+function appendGlbPreview(card: HTMLElement, asset: Asset): void {
+  const frame = document.createElement("div");
+  frame.className = "model-preview";
+  card.append(frame);
+
+  try {
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(320, 240, false);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.domElement.className = "model-canvas";
+    frame.append(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x1f2937, 2.5));
+    const directional = new THREE.DirectionalLight(0xffffff, 2);
+    directional.position.set(3, 5, 4);
+    scene.add(directional);
+
+    const camera = new THREE.PerspectiveCamera(35, 4 / 3, 0.01, 1000);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.addEventListener("change", renderScene);
+
+    const resize = () => {
+      const width = Math.max(1, frame.clientWidth || 320);
+      renderer.setSize(width, 240, false);
+      camera.aspect = width / 240;
+      camera.updateProjectionMatrix();
+      renderScene();
+    };
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(frame);
+
+    const loader = new GLTFLoader();
+    loader.load(asset.url, (gltf) => {
+      const model = gltf.scene;
+      scene.add(model);
+      const bounds = new THREE.Box3().setFromObject(model);
+      const center = bounds.getCenter(new THREE.Vector3());
+      const size = Math.max(bounds.getSize(new THREE.Vector3()).length(), 0.1);
+      model.position.sub(center);
+      camera.position.set(size, size * 0.7, size);
+      controls.target.set(0, 0, 0);
+      controls.update();
+      resize();
+    }, undefined, () => {
+      frame.replaceChildren(message("3D preview could not load. Open the original GLB file instead."));
+    });
+
+    function renderScene(): void {
+      renderer.render(scene, camera);
+    }
+
+    disposePreviews.push(() => {
+      resizeObserver.disconnect();
+      controls.dispose();
+      renderer.dispose();
+    });
+  } catch {
+    frame.replaceChildren(message("3D preview is unavailable in this host. Open the original GLB file instead."));
+  }
+}
+
+function hasExpired(value: string | undefined): boolean {
+  if (!value) return false;
+  const expires = new Date(value);
+  return !Number.isNaN(expires.getTime()) && expires.getTime() <= Date.now();
 }
 
 function externalLink(url: string, label: string): HTMLAnchorElement {

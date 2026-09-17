@@ -28,8 +28,11 @@ export function mediaGalleryHtml(allowedDomains: string[]): string {
     .card { border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 12px; overflow: hidden; background: color-mix(in srgb, Canvas 92%, currentColor 8%); }
     .preview { width: 100%; max-height: 280px; object-fit: contain; display: block; background: #111827; }
     video.preview { aspect-ratio: 16 / 9; } audio { width: calc(100% - 24px); margin: 12px; }
+    .model-preview { width: 100%; min-height: 240px; display: grid; place-items: center; background: #111827; }
+    .model-canvas { width: 100%; height: 240px; display: block; touch-action: none; }
     .body { padding: 10px 12px 12px; }
     .kind { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; }
+    .expiry { font-size: 12px; color: #6b7280; margin: 4px 0; }
     a { color: #2563eb; overflow-wrap: anywhere; font-size: 13px; }
     .empty { padding: 12px; border: 1px dashed color-mix(in srgb, currentColor 22%, transparent); border-radius: 8px; font-size: 13px; }
   </style>

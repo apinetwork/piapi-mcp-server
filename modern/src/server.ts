@@ -28,13 +28,14 @@ interface AppsLogger {
 const defaultTaskConfig: TaskConfig = { maxAttempts: 180, timeout: 900 };
 const resultSchema = z.object({
   taskId: z.string(),
-  usage: z.string().optional(),
-  assets: z.array(z.object({
-    kind: z.enum(["image", "video", "audio", "model"]),
-    url: z.url(),
-    previewUrl: z.url().optional(),
-    format: z.enum(["glb", "obj", "unknown"]).optional(),
-  })),
+    usage: z.string().optional(),
+    assets: z.array(z.object({
+      kind: z.enum(["image", "video", "audio", "model"]),
+      url: z.url(),
+      previewUrl: z.url().optional(),
+      expiresAt: z.string().datetime().optional(),
+      format: z.enum(["glb", "obj", "unknown"]).optional(),
+    })),
   viewerUrl: z.url().optional(),
 });
 
@@ -51,7 +52,7 @@ export async function createPiapiAppsServer(options: PiapiAppsServerOptions): Pr
     ...(options.apiBaseUrl ? { apiBaseUrl: options.apiBaseUrl } : {}),
   });
   const mediaDomains = options.mediaDomains ?? mediaDomainsFromEnvironment();
-  const viewerBaseUrl = parseViewerBaseUrl(options.viewerBaseUrl ?? process.env.PIAPI_MEDIA_VIEWER_BASE_URL);
+  const viewerBaseUrl = viewerBaseUrlFromEnvironment(options.viewerBaseUrl ?? process.env.PIAPI_MEDIA_VIEWER_BASE_URL);
   const taskConfig = options.taskConfig ?? defaultTaskConfig;
   const server = new McpServer({ name: "piapi-apps", version: "1.1.0" });
 
@@ -171,11 +172,17 @@ async function runTask({
   }
 }
 
-function parseViewerBaseUrl(value: string | undefined): URL | undefined {
+/**
+ * A viewer is an optional, separately deployed HTTPS application. It receives
+ * only the PiAPI task ID; raw artifact URLs and the PiAPI API key never pass
+ * through the UI resource or viewer URL.
+ */
+export function viewerBaseUrlFromEnvironment(value: string | undefined): URL | undefined {
   if (!value) return undefined;
   try {
     const url = new URL(value);
-    return url.protocol === "https:" ? url : undefined;
+    if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) return undefined;
+    return url;
   } catch {
     return undefined;
   }
