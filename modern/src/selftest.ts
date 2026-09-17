@@ -2,11 +2,18 @@ import assert from "node:assert/strict";
 import { Client } from "@modelcontextprotocol/client";
 import { InMemoryTransport } from "@modelcontextprotocol/server";
 import { createPiapiTaskClient } from "../../src/core/piapi-task.js";
+import { apiBaseUrlFromEnvironment, DEFAULT_PIAPI_API_BASE_URL } from "./api-base-url.js";
 import { createPiapiAppsServer } from "./server.js";
 import { mediaDomainsFromEnvironment, mediaGalleryHtml, MEDIA_GALLERY_URI } from "./media-gallery.js";
 import { createModernCatalogToolSpecs } from "./catalog.js";
 
 assert.equal(MEDIA_GALLERY_URI, "ui://piapi/media-gallery");
+assert.equal(DEFAULT_PIAPI_API_BASE_URL, "https://api.piapi.ai/api/v1");
+assert.equal(apiBaseUrlFromEnvironment(undefined), undefined);
+assert.equal(apiBaseUrlFromEnvironment("https://api.piapi.ai/api/v1/"), "https://api.piapi.ai/api/v1");
+assert.equal(apiBaseUrlFromEnvironment("http://127.0.0.1:4318/api/v1"), "http://127.0.0.1:4318/api/v1");
+assert.throws(() => apiBaseUrlFromEnvironment("http://example.com/api/v1"), /HTTPS/);
+assert.throws(() => apiBaseUrlFromEnvironment("https://api.piapi.ai/api/v1?unsafe=true"), /query string/);
 assert.deepEqual(mediaDomainsFromEnvironment("https://cdn.piapi.ai,invalid,http://unsafe.example"), ["https://cdn.piapi.ai"]);
 const html = mediaGalleryHtml(["https://cdn.piapi.ai"]);
 assert.ok(html.includes("ui/initialize"));

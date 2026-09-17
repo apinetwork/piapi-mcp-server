@@ -280,3 +280,12 @@ For a separate hosted viewer fallback, set the optional HTTPS-only
 `PIAPI_MEDIA_VIEWER_BASE_URL`; the server will add the task ID as a query parameter.
 Remote HTTP/OAuth deployment for ChatGPT or other hosted clients is intentionally a
 separate concern from this local stdio entry.
+
+See [`modern/docs/host-compatibility.md`](modern/docs/host-compatibility.md) for
+the current host verification matrix, the repeatable stdio protocol smoke test,
+and safe isolated-profile guidance for a visual Claude Desktop check. For
+local mock testing only, the modern executable accepts `PIAPI_API_BASE_URL`;
+it accepts HTTPS endpoints and limits plain HTTP to `localhost` or
+`127.0.0.1`. The separately versioned
+[`PiAPI media result profile`](modern/docs/piapi-media-result-profile.md)
+documents which Manager result fields can be embedded by the gallery.

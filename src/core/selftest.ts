@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { createPiapiTaskClient } from "./piapi-task.js";
+import { mediaKindForOutputField, PIAPI_MEDIA_PROFILE_VERSION } from "./media-profile.js";
 import { mediaMimeType, normalizePiapiMediaResult } from "./media-result.js";
+
+assert.equal(PIAPI_MEDIA_PROFILE_VERSION, "2026-09-17");
+assert.equal(mediaKindForOutputField("video"), "video");
+assert.equal(mediaKindForOutputField("resource_without_watermark", "video"), "video");
+assert.equal(mediaKindForOutputField("resource", "cover"), "image");
+assert.equal(mediaKindForOutputField("url"), undefined);
 
 const media = normalizePiapiMediaResult("task-1", "3", {
   image_urls: ["https://cdn.piapi.ai/a.png"],
@@ -14,6 +21,26 @@ assert.equal(mediaMimeType(media.assets.find((asset) => asset.kind === "model")!
 assert.equal(media.assets.find((asset) => asset.kind === "video")?.previewUrl, "https://cdn.piapi.ai/v.jpg");
 assert.equal(media.assets.find((asset) => asset.kind === "audio")?.previewUrl, "https://cdn.piapi.ai/cover.jpg");
 assert.equal(normalizePiapiMediaResult("task-2", undefined, { url: "https://untyped.example/out" }).assets.length, 0);
+const managerMedia = normalizePiapiMediaResult("task-2a", undefined, {
+  video: "https://cdn.piapi.ai/kling.mp4",
+  works: [{
+    video: {
+      resource: "https://cdn.piapi.ai/kling-watermarked.mp4",
+      resource_without_watermark: "https://cdn.piapi.ai/kling-raw.mp4",
+    },
+    cover: { resource: "https://cdn.piapi.ai/kling-cover.jpg" },
+    image: { resource: "https://cdn.piapi.ai/kling-image.jpg" },
+    audio: { resource: "https://cdn.piapi.ai/kling-audio.mp3" },
+  }],
+});
+assert.deepEqual(managerMedia.assets.map((asset) => `${asset.kind}:${asset.url}`), [
+  "video:https://cdn.piapi.ai/kling.mp4",
+  "video:https://cdn.piapi.ai/kling-watermarked.mp4",
+  "video:https://cdn.piapi.ai/kling-raw.mp4",
+  "image:https://cdn.piapi.ai/kling-cover.jpg",
+  "image:https://cdn.piapi.ai/kling-image.jpg",
+  "audio:https://cdn.piapi.ai/kling-audio.mp3",
+]);
 
 const responses = [
   { code: 200, data: { task_id: "task-3" } },

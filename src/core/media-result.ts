@@ -1,6 +1,8 @@
 /** Normalized media output that is safe to expose to a UI resource. */
 
-export type PiapiMediaKind = "image" | "video" | "audio" | "model";
+import { mediaKindForOutputField, type PiapiMediaKind } from "./media-profile.js";
+
+export type { PiapiMediaKind } from "./media-profile.js";
 
 export interface PiapiMediaAsset {
   kind: PiapiMediaKind;
@@ -15,14 +17,6 @@ export interface PiapiMediaResult {
   assets: PiapiMediaAsset[];
   viewerUrl?: string;
 }
-
-const IMAGE_KEYS = new Set([
-  "image_url", "image_urls", "temporary_image_urls", "no_background_image",
-  "last_frame", "thumbnail_url", "cover_url",
-]);
-const VIDEO_KEYS = new Set(["video_url", "video_urls", "video_raw", "combined_video"]);
-const AUDIO_KEYS = new Set(["audio_url", "audio_urls"]);
-const MODEL_KEYS = new Set(["model_file", "model_file_url", "model_url"]);
 
 export function normalizePiapiMediaResult(
   taskId: string,
@@ -51,15 +45,12 @@ export function normalizePiapiMediaResult(
     }
   };
 
-  walk(output, (key, value, parent) => {
-    if (IMAGE_KEYS.has(key)) add("image", value);
-    else if (VIDEO_KEYS.has(key)) add("video", value);
-    else if (AUDIO_KEYS.has(key)) add("audio", value);
-    else if (MODEL_KEYS.has(key)) add("model", value);
+  walk(output, (key, value, parent, parentKey) => {
+    const knownKind = mediaKindForOutputField(key, parentKey);
+    if (knownKind) add(knownKind, value);
     else if (key === "url" && isRecord(parent)) {
       // Provider-specific nested objects often use names such as video_raw,
       // last_frame, or clip. The parent key is available to classify safely.
-      const parentKey = parent.__piapiParentKey;
       if (parentKey === "video_raw") add("video", value);
       else if (parentKey === "last_frame") add("image", value);
     }
@@ -99,15 +90,18 @@ export function mediaMimeType(asset: PiapiMediaAsset): string {
   return "application/octet-stream";
 }
 
-function walk(value: unknown, visit: (key: string, value: unknown, parent: Record<string, unknown>) => void, parentKey?: string): void {
+function walk(
+  value: unknown,
+  visit: (key: string, value: unknown, parent: Record<string, unknown>, parentKey?: string) => void,
+  parentKey?: string
+): void {
   if (Array.isArray(value)) {
     for (const item of value) walk(item, visit, parentKey);
     return;
   }
   if (!isRecord(value)) return;
-  const contextualParent = { ...value, __piapiParentKey: parentKey };
   for (const [key, child] of Object.entries(value)) {
-    visit(key, child, contextualParent);
+    visit(key, child, value, parentKey);
     walk(child, visit, key);
   }
 }

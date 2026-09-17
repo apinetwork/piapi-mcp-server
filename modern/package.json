@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/build-ui.mjs",
     "start": "node dist/modern/src/index.js",
-    "test": "npm run build && node dist/modern/src/selftest.js"
+    "test": "npm run build && node dist/modern/src/selftest.js && node scripts/host-smoke.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/client": "2.0.0",
