@@ -3,6 +3,7 @@ import { createServer } from "node:http";
 import { Client, OAuthError, OAuthErrorCode, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import type { AuthMetadataOptions, AuthInfo } from "@modelcontextprotocol/server";
+import { createHttpOAuthTokenVerifier, createHttpTenantResolver } from "./remote-adapters.js";
 import { createPiapiAppsRemoteHandler } from "./remote.js";
 
 const catalog = {
@@ -44,6 +45,53 @@ const address = server.address();
 assert.ok(address && typeof address === "object");
 const resourceServerUrl = new URL(`http://127.0.0.1:${address.port}/mcp`);
 
+const delegatedApiBaseUrl = `http://127.0.0.1:${upstreamAddress.port}/api/v1`;
+const remoteAdapterVerifier = createHttpOAuthTokenVerifier({
+  introspectionUrl: new URL(`http://127.0.0.1:${address.port}/introspect`),
+  resourceServerUrl,
+  authorizationHeader: "Bearer introspection-service-token",
+  fetchImpl: async (url, init) => {
+    assert.equal(String(url), `http://127.0.0.1:${address.port}/introspect`);
+    assert.equal(new Headers(init?.headers).get("authorization"), "Bearer introspection-service-token");
+    assert.equal(init?.body, "token=adapter-token");
+    return new Response(JSON.stringify({
+      active: true,
+      sub: "subject-1",
+      client_id: "oauth-client-1",
+      scope: "mcp media",
+      exp: Math.floor(Date.now() / 1000) + 60,
+      resource: resourceServerUrl.href,
+    }), { status: 200 });
+  },
+});
+const adapterAuth = await remoteAdapterVerifier.verifyAccessToken("adapter-token");
+assert.equal(adapterAuth.clientId, "oauth-client-1");
+assert.deepEqual(adapterAuth.scopes, ["mcp", "media"]);
+assert.equal(adapterAuth.extra?.subject, "subject-1");
+
+const remoteAdapterResolver = createHttpTenantResolver({
+  brokerUrl: new URL(`http://127.0.0.1:${address.port}/tenant-broker`),
+  authorizationHeader: "Bearer broker-service-token",
+  fetchImpl: async (url, init) => {
+    assert.equal(String(url), `http://127.0.0.1:${address.port}/tenant-broker`);
+    assert.equal(new Headers(init?.headers).get("authorization"), "Bearer broker-service-token");
+    assert.deepEqual(JSON.parse(String(init?.body)), {
+      subject: "subject-1",
+      client_id: "oauth-client-1",
+      scopes: ["mcp", "media"],
+      expires_at: adapterAuth.expiresAt,
+    });
+    return new Response(JSON.stringify({
+      api_key: "delegated-tenant-key",
+      api_base_url: delegatedApiBaseUrl,
+    }), { status: 200 });
+  },
+});
+assert.deepEqual(await remoteAdapterResolver.resolve(adapterAuth), {
+  apiKey: "delegated-tenant-key",
+  apiBaseUrl: delegatedApiBaseUrl,
+});
+
 const authMetadata: AuthMetadataOptions = {
   resourceServerUrl,
   oauthMetadata: {
@@ -76,7 +124,7 @@ const handler = createPiapiAppsRemoteHandler({
   tenantResolver: {
     async resolve(auth) {
       assert.equal(auth.clientId, "remote-test-client");
-      return { apiKey: "tenant-test-key", apiBaseUrl: `http://127.0.0.1:${upstreamAddress.port}/api/v1` };
+      return { apiKey: "tenant-test-key", apiBaseUrl: delegatedApiBaseUrl };
     },
   },
   catalog,

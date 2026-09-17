@@ -25,13 +25,28 @@ results or UI data.
 ## Required production integration
 
 This repository does **not** become an OAuth Authorization Server by itself.
+It includes two HTTPS service adapters:
+
+- `createHttpOAuthTokenVerifier` uses RFC 7662-style token introspection and
+  maps `sub`, `client_id`, `scope`, `exp`, and the resource audience into the
+  MCP SDK authentication context.
+- `createHttpTenantResolver` calls a trusted tenant broker with the validated
+  subject and scopes; the broker returns a server-only delegated PiAPI
+  credential for that authorized request.
+
+The deployable `modern/src/remote-index.ts` entrypoint wires those adapters
+from environment references. It refuses to start if public URLs are not HTTPS
+or service-to-service authorization values are absent. Start it after build
+with `npm --prefix modern run start:remote`.
+
 The PiAPI identity/account service must provide:
 
 1. Authorization Code + PKCE consent and token endpoints;
 2. signed JWT validation via JWKS or token introspection;
 3. a stable subject/client identity in `AuthInfo`;
-4. a server-side subject-to-PiAPI-credential lookup, ideally from an encrypted
-   credential store or token exchange rather than plaintext database fields;
+4. a server-side tenant broker that maps the validated subject to a delegated
+   PiAPI credential, ideally via token exchange or an encrypted credential
+   store rather than plaintext database fields;
 5. token revocation and credential-deletion handling.
 
 Wire those components into the handler with:
@@ -49,6 +64,22 @@ createPiapiAppsRemoteHandler({
 `tenantResolver` must authorize the subject before returning an API credential.
 Do not replace either integration with a static environment token in a public
 deployment.
+
+The default entrypoint expects these deployment-secret references:
+
+```text
+PIAPI_MCP_PUBLIC_URL=https://mcp.example.com/mcp
+PIAPI_MCP_OAUTH_ISSUER=https://accounts.example.com
+PIAPI_MCP_OAUTH_AUTHORIZATION_ENDPOINT=https://accounts.example.com/authorize
+PIAPI_MCP_OAUTH_TOKEN_ENDPOINT=https://accounts.example.com/token
+PIAPI_MCP_OAUTH_INTROSPECTION_URL=https://accounts.example.com/introspect
+PIAPI_MCP_OAUTH_INTROSPECTION_AUTHORIZATION=Bearer <service credential>
+PIAPI_MCP_TENANT_BROKER_URL=https://identity-internal.example.com/mcp/tenant
+PIAPI_MCP_TENANT_BROKER_AUTHORIZATION=Bearer <service credential>
+```
+
+The two authorization values are deployment secrets; do not place literal
+values in client configuration, repository files, or public documentation.
 
 ## Deployment posture
 
